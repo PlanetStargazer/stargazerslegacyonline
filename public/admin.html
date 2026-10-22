@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Stargazer's Legacy - Administrator</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #050816; --panel: #0e1427; --panel2: #151d36; --line: #263253; --text: #e6eaf5; --dim: #8b97b8;
+    --gold: #fbbf24; --gold2: #f59e0b; --blue: #38bdf8; --green: #4ade80; --red: #f87171; --redbg: #3b1219;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--text); font: 14px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; min-height: 100vh;
+    background: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,.10), transparent 60%),
+                radial-gradient(900px 500px at -10% 10%, rgba(251,191,36,.08), transparent 60%), var(--bg);
+  }
+  /* a faint field of stars */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20px 30px, #fff8, transparent), radial-gradient(1px 1px at 140px 90px, #fff6, transparent),
+      radial-gradient(1.5px 1.5px at 260px 40px, #fbbf2477, transparent), radial-gradient(1px 1px at 90px 170px, #fff5, transparent);
+    background-size: 300px 220px;
+  }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; margin: 0; }
+  h1 { color: var(--gold); font-size: 22px; letter-spacing: .04em; }
+  h2 { color: var(--gold); font-size: 17px; margin-bottom: 4px; }
+  code { background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+  .wrap { position: relative; max-width: 1100px; margin: 0 auto; padding: 0 16px 40px; }
+  .hidden { display: none !important; }
+  .dim { color: var(--dim); }
+
+  header.top { position: sticky; top: 0; z-index: 20; margin: 0 -16px 18px; padding: 12px 16px 0; background: rgba(5,8,22,.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .brand .star { font-size: 26px; filter: drop-shadow(0 0 8px rgba(251,191,36,.7)); }
+  .brand .sp { flex: 1; }
+  nav.tabs { display: flex; gap: 4px; margin-top: 10px; overflow-x: auto; }
+  nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--dim); padding: 8px 14px; font-weight: 600; }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.on { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .card { background: linear-gradient(180deg, var(--panel), #0b1122); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+  .card.warn { border-color: #7f1d1d; background: linear-gradient(180deg, #1a0e16, #0e0a14); }
+  .card > p { margin: 2px 0 12px; color: var(--dim); }
+  .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .head .sp { flex: 1; }
+
+  input, select, button { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); padding: 7px 12px; border-radius: 8px; outline: none; transition: border-color .15s, background .15s, transform .05s; }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(56,189,248,.15); }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--gold); background: #1b2547; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #1a1203; border-color: var(--gold2); font-weight: 700; }
+  button.primary:hover { filter: brightness(1.1); }
+  button.danger { color: var(--red); border-color: #7f1d1d; background: var(--redbg); }
+  button.danger:hover { border-color: var(--red); background: #4a1620; }
+  button.sm { padding: 3px 9px; font-size: 12px; border-radius: 6px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .stat { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; position: relative; overflow: hidden; }
+  .stat::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--blue); }
+  .stat.gold::after { background: var(--gold); } .stat.green::after { background: var(--green); } .stat.red::after { background: var(--red); }
+  .stat b { display: block; font-size: 22px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 700; margin-top: 2px; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 12px; white-space: nowrap; }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; background: var(--panel2); }
+  tbody tr { border-top: 1px solid var(--line); }
+  tbody tr:hover { background: rgba(56,189,248,.05); }
+  td.act { text-align: right; } td.act button { margin-left: 3px; }
+  .badge { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+  .badge.on { background: rgba(74,222,128,.15); color: var(--green); }
+  .badge.ban { background: var(--redbg); color: var(--red); border: 1px solid #7f1d1d; }
+  .badge.cls { background: rgba(56,189,248,.12); color: var(--blue); }
+  .gold-t { color: var(--gold); }
+  .empty { text-align: center; color: var(--dim); padding: 22px !important; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+
+  /* login */
+  #login { max-width: 420px; margin: 12vh auto 0; text-align: center; }
+  #login .star { font-size: 44px; filter: drop-shadow(0 0 14px rgba(251,191,36,.8)); }
+  #login form { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  #login input { text-align: center; }
+
+  /* toasts */
+  #toasts { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; max-width: min(380px, calc(100vw - 32px)); }
+  .toast { padding: 10px 14px; border-radius: 10px; border: 1px solid; background: var(--panel); box-shadow: 0 8px 30px rgba(0,0,0,.5); animation: pop .2s ease-out; }
+  .toast.ok { border-color: #166534; color: #bbf7d0; background: #0b2417; }
+  .toast.err { border-color: #7f1d1d; color: #fecaca; background: #2a0f15; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* modal */
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--gold2); border-radius: 14px; padding: 20px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.7); }
+  dialog::backdrop { background: rgba(2,4,12,.7); backdrop-filter: blur(3px); }
+  dialog p { margin: 8px 0 12px; color: var(--dim); }
+  dialog input { width: 100%; margin-bottom: 14px; }
+  dialog .btns { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* character inspector */
+  #charModal {
+    width: min(880px, calc(100vw - 32px));
+    max-height: 90vh;
+    padding: 20px 24px 24px;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--gold);
+    background: linear-gradient(180deg, #10162b, #090e1d);
+    color: var(--text);
+    border-radius: 14px;
+    box-shadow: 0 25px 80px rgba(0,0,0,.85);
+    overflow-y: auto;
+  }
+  .ci-avatar-box {
+    width: 110px; height: 110px; border-radius: 12px; background: radial-gradient(circle at 50% 35%, #1f2c4c, #0d1322);
+    border: 2px solid var(--gold2); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,.5), inset 0 0 15px rgba(251,191,36,.1); flex-shrink: 0;
+  }
+  .ci-avatar-box canvas { width: 110px; height: 110px; display: block; image-rendering: pixelated; }
+  .ci-bars { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .ci-bar-box { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+  .ci-bar-head { display: flex; justify-content: space-between; font-size: 11px; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; font-weight: 700; }
+  .ci-prog { height: 8px; background: rgba(0,0,0,.4); border-radius: 4px; overflow: hidden; position: relative; }
+  .ci-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
+  .ci-fill.hp { background: linear-gradient(90deg, #ef4444, #22c55e); }
+  .ci-fill.mp { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .ci-fill.xp { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
+
+  .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .subtabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--dim); padding: 6px 12px; font-weight: 600; font-size: 13px; }
+  .subtabs button:hover { color: var(--text); }
+  .subtabs button.on { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .ci-sec { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .ci-sec h3 { font-size: 13px; color: var(--gold); margin: 0 0 10px; text-transform: uppercase; letter-spacing: .05em; font-family: system-ui, sans-serif; display: flex; align-items: center; gap: 6px; }
+
+  .ci-grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+  .ci-attr { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .ci-attr-lbl { font-size: 11px; text-transform: uppercase; color: var(--dim); }
+  .ci-attr-val { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  .ci-gear-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .ci-gear-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; }
+  .ci-gear-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--panel2); display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid var(--line); flex-shrink: 0; }
+  .ci-gear-name { font-weight: 700; font-size: 13px; }
+  .ci-gear-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+  .ci-bag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 440px; margin-bottom: 6px; }
+  .ci-bag-slot { aspect-ratio: 1; background: var(--panel); border: 1px dashed var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; }
+  .ci-bag-slot.has-item { border-style: solid; border-color: var(--blue); background: rgba(56,189,248,.07); }
+  .ci-bag-num { position: absolute; top: 3px; left: 5px; font-size: 9px; color: var(--dim); }
+
+  .ci-raw-pre { background: #050813; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 12px; max-height: 340px; overflow: auto; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="login" class="card">
+    <div class="star">&#9733;</div>
+    <h1>Stargazer's Legacy</h1>
+    <p class="dim" style="margin:4px 0 0">Administrator</p>
+    <form id="loginForm">
+      <input type="password" id="pw" placeholder="Administrator password" autocomplete="current-password" required>
+      <button class="primary">Sign in</button>
+    </form>
+    <p class="dim" style="margin-top:14px;font-size:12px">Set the password with <code>php server/admin-cli.php passwd</code></p>
+  </section>
+
+  <div id="panel" class="hidden">
+    <header class="top">
+      <div class="brand">
+        <span class="star gold-t">&#9733;</span><h1>Stargazer's Legacy</h1><span class="dim">Administrator</span>
+        <span class="sp"></span>
+        <span id="maintPill"></span>
+        <button id="refresh">&#8635; Refresh</button><button id="logout">Sign out</button>
+      </div>
+      <nav class="tabs" id="tabs">
+        <button data-tab="overview" class="on">Overview</button>
+        <button data-tab="accounts">Accounts</button>
+        <button data-tab="chars">Characters</button>
+        <button data-tab="tools">World tools</button>
+      </nav>
+    </header>
+
+    <div data-pane="overview">
+      <div class="card">
+        <div class="head"><h2>World</h2></div>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Spawned in the world</h2><span class="dim">right now</span></div>
+        <div class="stats" id="spawnStats"></div>
+        <div class="grid3" id="spawnTables"></div>
+      </div>
+    </div>
+
+    <div data-pane="accounts" class="hidden">
+      <div class="card">
+        <div class="head"><h2>Accounts</h2><span class="sp"></span>
+          <input id="q" placeholder="Search name&hellip;"><button id="search">Search</button></div>
+        <div class="tablewrap"><table><thead><tr><th>ID</th><th>Name</th><th>Chars</th><th>Last seen</th><th>Status</th><th></th></tr></thead><tbody id="users"></tbody></table></div>
+      </div>
+    </div>
+
+    <div data-pane="chars" class="hidden">
+      <div class="card">
+        <div class="head"><h2>Characters</h2><span id="charsFor" class="dim"></span><span class="sp"></span><button id="allChars" class="sm">Show all accounts</button></div>
+        <div class="tablewrap"><table><thead><tr><th>ID</th><th>Account</th><th>Name</th><th>Race / Class</th><th>Lvl</th><th>Gold</th><th></th></tr></thead><tbody id="chars"></tbody></table></div>
+      </div>
+    </div>
+
+    <div data-pane="tools" class="hidden">
+      <div class="card">
+        <div class="head"><h2>Weather</h2><span class="dim">now: <b id="wxNow">-</b></span></div>
+        <p>Changes the weather for everybody at once. Rain and storms last the chosen number of game hours, then the weather changes on its own again.</p>
+        <div class="row">
+          <button class="wx" data-wx="clear">&#9728; Clear</button>
+          <button class="wx" data-wx="rain">&#9730; Rain</button>
+          <button class="wx" data-wx="storm">&#9889; Storm</button>
+          <label class="dim">for <input id="wxHours" type="number" min="1" max="48" value="6" style="width:70px"> game hours</label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Loot bags</h2></div>
+        <p>Removes every dropped loot bag from the world.</p>
+        <button class="danger" id="purgeBags">Purge bags</button>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Maintenance mode</h2></div>
+        <p>When switched on, everybody online gets a 30 second warning with a countdown; then they are logged out and returned to the title screen, which shows the maintenance sign. Nobody can log in or register while it is on. Administrators are not affected.</p>
+        <div class="row"><b id="maintState"></b><button id="maintToggle" class="danger"></button></div>
+      </div>
+      <div class="card warn">
+        <div class="head"><h2 style="color:var(--red)">Reset the world</h2></div>
+        <p>Clock back to day 1, 08:00; chat, groups, battles and presence are cleared; everyone returns to character selection.</p>
+        <div class="row">
+          <label class="dim">Characters:
+            <select id="rChars"><option value="keep">keep as they are</option><option value="home">send home</option><option value="delete">delete all</option></select>
+          </label>
+          <label class="dim"><input type="checkbox" id="rAcc" style="vertical-align:middle"> also delete all accounts</label>
+        </div>
+        <div class="row"><input id="rConfirm" placeholder="Type RESET"><button class="danger" id="reset">Reset world</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<dialog id="dlg">
+  <h3 id="dlgTitle"></h3>
+  <p id="dlgText"></p>
+  <input id="dlgInput" class="hidden">
+  <div class="btns"><button id="dlgCancel">Cancel</button><button id="dlgOk" class="primary">OK</button></div>
+</dialog>
+
+<dialog id="charModal">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div class="ci-avatar-box">
+        <canvas id="ciCanvas" width="110" height="110"></canvas>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h2 id="ciName" style="font-size:24px;color:var(--gold);margin:0"></h2>
+          <span id="ciId" class="dim" style="font-size:13px"></span>
+          <span id="ciGmBadge" class="badge on hidden">GM</span>
+        </div>
+        <div style="color:var(--dim);font-size:13px;margin:3px 0 6px">
+          <span id="ciRaceCls" style="font-weight:600;color:var(--text)"></span> &bull; Account: <button id="ciAccLink" class="sm" style="padding:1px 6px;margin-left:4px"></button>
+        </div>
+        <div id="ciPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span id="ciOnlinePill"></span>
+          <span id="ciStatusPills"></span>
+        </div>
+      </div>
+    </div>
+    <button id="ciModalCloseX" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px">&times;</button>
+  </div>
+
+  <div class="ci-bars">
+    <div class="ci-bar-box">
+      <div class="ci-bar-head"><span>Health (HP)</span><span id="ciHpText"></span></div>
+      <div class="ci-prog"><div id="ciHpBar" class="ci-fill hp" style="width:0%"></div></div>
+    </div>
+    <div class="ci-bar-box">
+      <div class="ci-bar-head"><span>Mana (MP)</span><span id="ciMpText"></span></div>
+      <div class="ci-prog"><div id="ciMpBar" class="ci-fill mp" style="width:0%"></div></div>
+    </div>
+    <div class="ci-bar-box">
+      <div class="ci-bar-head"><span>Experience</span><span id="ciXpText"></span></div>
+      <div class="ci-prog"><div id="ciXpBar" class="ci-fill xp" style="width:100%"></div></div>
+    </div>
+    <div class="ci-bar-box">
+      <div class="ci-bar-head"><span>Gold</span><span id="ciGoldText" class="gold-t"></span></div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">Shared bag coins</div>
+    </div>
+  </div>
+
+  <nav class="subtabs" id="ciTabs">
+    <button data-citab="gear" class="on">Gear &amp; Stats</button>
+    <button data-citab="bag">Inventory (16)</button>
+    <button data-citab="world">Location &amp; Fleet</button>
+    <button data-citab="raw">Raw Data</button>
+  </nav>
+
+  <!-- PANE: GEAR & STATS -->
+  <div data-cipane="gear">
+    <div class="ci-sec">
+      <h3>Attributes &amp; Modifiers</h3>
+      <div class="ci-grid4">
+        <div class="ci-attr"><div class="ci-attr-lbl">Strength</div><div class="ci-attr-val" id="ciStr">-</div></div>
+        <div class="ci-attr"><div class="ci-attr-lbl">Dexterity</div><div class="ci-attr-val" id="ciDex">-</div></div>
+        <div class="ci-attr"><div class="ci-attr-lbl">Intelligence</div><div class="ci-attr-val" id="ciInt">-</div></div>
+        <div class="ci-attr"><div class="ci-attr-lbl">Wisdom</div><div class="ci-attr-val" id="ciWis">-</div></div>
+      </div>
+    </div>
+
+    <div class="ci-sec">
+      <h3>Equipped Equipment</h3>
+      <div class="ci-gear-list">
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#9876;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Weapon</div>
+            <div class="ci-gear-name" id="ciWName">-</div>
+            <div class="ci-gear-sub" id="ciWSub">-</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#128737;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Armour</div>
+            <div class="ci-gear-name" id="ciAName">-</div>
+            <div class="ci-gear-sub" id="ciASub">-</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#128737;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Shield</div>
+            <div class="ci-gear-name" id="ciSName">-</div>
+            <div class="ci-gear-sub" id="ciSSub">-</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#129686;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Headgear</div>
+            <div class="ci-gear-name" id="ciHName">-</div>
+            <div class="ci-gear-sub" id="ciHSub">-</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#128098;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Swamp Boots</div>
+            <div class="ci-gear-name" id="ciBootsVal">-</div>
+            <div class="ci-gear-sub">Protects from poisonous marsh water</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#128062;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Active Pet Companion</div>
+            <div class="ci-gear-name" id="ciPetVal">None</div>
+            <div class="ci-gear-sub">Follows hero in towns and overworld</div>
+          </div>
+        </div>
+        <div class="ci-gear-card">
+          <div class="ci-gear-icon">&#127917;</div>
+          <div>
+            <div class="dim" style="font-size:10px;text-transform:uppercase">Hero Appearance</div>
+            <div class="ci-gear-sub" id="ciLookVal" style="color:var(--text);font-size:12px">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANE: INVENTORY -->
+  <div data-cipane="bag" class="hidden">
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <div style="flex:1;min-width:280px">
+        <div class="ci-sec">
+          <h3>16-Slot Backpack</h3>
+          <div class="ci-bag-grid" id="ciBagGrid"></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:280px">
+        <div class="ci-sec">
+          <h3>Consumables &amp; Supplies</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+            <div>Minor Healing: <b id="ciPotH1">0</b></div>
+            <div>Minor Mana: <b id="ciPotM1">0</b></div>
+            <div>Healing Potion: <b id="ciPotH2">0</b></div>
+            <div>Mana Potion: <b id="ciPotM2">0</b></div>
+            <div>Greater Healing: <b id="ciPotH3">0</b></div>
+            <div>Greater Mana: <b id="ciPotM3">0</b></div>
+            <div>Antidote: <b id="ciPotAnti">0</b></div>
+            <div>Recall Potion: <b id="ciPotRecall">0</b></div>
+            <div style="grid-column:span 2;border-top:1px solid var(--line);margin-top:4px;padding-top:4px"></div>
+            <div>Travel Rations: <b id="ciRations">0</b></div>
+            <div>Fresh Meat: <b id="ciMeat">0</b></div>
+            <div>Heavy Leather: <b id="ciLeather">0</b></div>
+            <div>Sextant: <b id="ciSextant">-</b></div>
+          </div>
+        </div>
+        <div class="ci-sec">
+          <h3>Bagged Magic Items</h3>
+          <div id="ciBagMagic" style="max-height:130px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANE: LOCATION & FLEET -->
+  <div data-cipane="world" class="hidden">
+    <div class="ci-sec">
+      <h3>World Presence &amp; Position</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:13px">
+        <div><b>Saved position:</b> <span id="ciModeLoc">-</span></div>
+        <div><b>Aboard ship:</b> <span id="ciInShip">No</span></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13px" id="ciPresenceBlock"></div>
+    </div>
+    <div class="ci-sec">
+      <h3>Owned Ships</h3>
+      <div class="tablewrap"><table><thead><tr><th>Ship Name</th><th>Port</th><th>Coordinates</th></tr></thead><tbody id="ciShipsTable"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PANE: RAW DATA -->
+  <div data-cipane="raw" class="hidden">
+    <div class="ci-sec">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 style="margin:0">Complete Character JSON</h3>
+        <button id="ciCopyJson" class="sm">Copy JSON</button>
+      </div>
+      <pre class="ci-raw-pre"><code id="ciJson"></code></pre>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button id="ciHomeBtn" class="sm" title="Sends character to Castle Stargazer entrance on overworld">Send Home</button>
+      <button id="ciGmBtn" class="sm">Make GM</button>
+      <button id="ciRenameBtn" class="sm">Rename</button>
+      <button id="ciDelBtn" class="sm danger">Delete</button>
+    </div>
+    <div>
+      <button id="ciCloseBtn" class="primary sm">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="js/pets.js"></script>
+<script src="js/heroart.js"></script>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let token = '';
+  try { token = sessionStorage.getItem('sgl_admin') || ''; } catch (e) {}
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const when = t => t ? new Date(t * 1000).toLocaleString() : '-';
+
+  // Vector art drawing helpers for character avatar preview (heroart.js)
+  const VG_OUT = 'rgba(2,6,23,0.92)';
+  function vgShade(hex, amt) {
+    let r, g, b;
+    if (hex.charCodeAt(0) === 35) { const n = parseInt(hex.slice(1), 16); r = (n >> 16) & 255; g = (n >> 8) & 255; b = n & 255; }
+    else { const m = hex.match(/\d+/g) || [0, 0, 0]; r = +m[0]; g = +m[1]; b = +m[2]; }
+    const f = c => Math.max(0, Math.min(255, Math.round(amt >= 0 ? c + (255 - c) * amt : c * (1 + amt))));
+    return `rgb(${f(r)},${f(g)},${f(b)})`;
+  }
+  function vgLin(ctx, x0, y0, x1, y1, stops) {
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    stops.forEach(([o, c]) => g.addColorStop(o, c));
+    return g;
+  }
+  function vgPoly(ctx, s, pts, fill, stroke, lw) {
+    ctx.beginPath();
+    pts.forEach((p, i) => { if (i) ctx.lineTo(p[0] * s, p[1] * s); else ctx.moveTo(p[0] * s, p[1] * s); });
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.lineJoin = 'round'; ctx.stroke(); }
+  }
+  function vgPath(ctx, s, pts, color, lw) {
+    ctx.beginPath();
+    pts.forEach((p, i) => { if (i) ctx.lineTo(p[0] * s, p[1] * s); else ctx.moveTo(p[0] * s, p[1] * s); });
+    ctx.strokeStyle = color; ctx.lineWidth = lw || 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+  function vgEll(ctx, x, y, rx, ry, fill, stroke, lw, rot) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot || 0, 0, Math.PI * 2);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+  }
+  function vgBall(ctx, x, y, r, c0, c1, stroke, lw) {
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r * 1.05);
+    g.addColorStop(0, c0); g.addColorStop(1, c1);
+    vgEll(ctx, x, y, r, r, g, stroke, lw);
+  }
+  function vgGlow(ctx, x, y, r, rgb, a) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(0.5, r));
+    g.addColorStop(0, `rgba(${rgb},${a})`);
+    g.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2); ctx.fill();
+  }
+  function vgGround(ctx, s, w) {
+    const r = s * (w || 0.3);
+    const g = ctx.createRadialGradient(s * 0.5, s * 0.93, 0, s * 0.5, s * 0.93, r);
+    g.addColorStop(0, 'rgba(0,0,0,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.translate(0, s * 0.93); ctx.scale(1, 0.22); ctx.translate(0, -s * 0.93);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s * 0.5, s * 0.93, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function vgEyes(ctx, cx, cy, gap, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(cx - gap, cy, Math.max(0.6, r), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + gap, cy, Math.max(0.6, r), 0, Math.PI * 2); ctx.fill();
+  }
+  function vgTick() { return 0; }
+
+  // Item tables & metadata
+  const WEAPONS = [
+    { name: "Dagger", dice: "1d4", b: 0, stat: 'finesse', range: 1 },
+    { name: "Heavy Mace", dice: "1d8", b: 0, stat: 'str', range: 1 },
+    { name: "Hunting Bow", dice: "1d6", b: 0, stat: 'dex', range: 4 },
+    { name: "Musket Pistol", dice: "1d8", b: 0, stat: 'dex', range: 3, gun: 'pistol' },
+    { name: "Broadsword", dice: "1d10", b: 0, stat: 'str', range: 1 },
+    { name: "Blunderbuss", dice: "2d6", b: 0, stat: 'dex', range: 2, gun: 'blunderbuss' },
+    { name: "Silver Halberd", dice: "2d6", b: 0, stat: 'str', range: 2 },
+    { name: "Musket Rifle", dice: "2d8", b: 0, stat: 'dex', range: 6, gun: 'rifle' },
+    { name: "Astral Blade", dice: "2d6+2", b: 2, stat: 'finesse', range: 1 }
+  ];
+  const ARMORS = [
+    { name: "Cloth Tunic", ac: 10, maxDex: 99 },
+    { name: "Leather Armor", ac: 11, maxDex: 99 },
+    { name: "Studded Cuirass", ac: 12, maxDex: 3 },
+    { name: "Chainmail Hauberk", ac: 14, maxDex: 2 },
+    { name: "Steel Plate", ac: 17, maxDex: 0 },
+    { name: "Astral Aegis", ac: 19, maxDex: 0 }
+  ];
+  const SHIELDS = [
+    { name: "Buckler", ac: 1, cost: 20 },
+    { name: "Round Shield", ac: 2, cost: 50 },
+    { name: "Heater Shield", ac: 2, cost: 110 },
+    { name: "Tower Shield", ac: 3, cost: 240 },
+    { name: "Astral Barrier", ac: 4, cost: 650 }
+  ];
+  const HEADS = [
+    { name: "Wizard Hat", vis: 'wizhat', ac: 0, mp: 1 },
+    { name: "Cleric Circlet", vis: 'circlet', ac: 0, mp: 1 },
+    { name: "Ranger Hood", vis: 'hood', ac: 0, mp: 0 },
+    { name: "Minstrel's Beret", vis: 'beret', ac: 0, mp: 1 },
+    { name: "Tinker Goggles", vis: 'goggles', ac: 0, mp: 1 },
+    { name: "Leather Cap", vis: 'cap', ac: 1, mp: 0 },
+    { name: "Mail Coif", vis: 'coif', ac: 1, mp: 0 },
+    { name: "Iron Helm", vis: 'helm', ac: 2, mp: 0 },
+    { name: "Astral Great Helm", vis: 'greathelm', ac: 3, mp: 0 },
+    { name: "Captain's Tricorn", vis: 'tricorn', ac: 0, mp: 0 }
+  ];
+  const AFFIX = {
+    flaming: { name: 'Flaming', txt: '+1d6 fire damage' },
+    frozen: { name: 'Frozen', txt: '+1d6 frost damage' },
+    shocking: { name: 'Shocking', txt: '+1d8 lightning damage' },
+    vicious: { name: 'Vicious', txt: '+3 damage' },
+    keen: { name: 'Keen', txt: 'Crit on 19-20' },
+    holy: { name: 'Holy', txt: '+2d6 vs undead' },
+    venomous: { name: 'Venomous', txt: '30% chance to poison' },
+    dragonbane: { name: 'Dragonbane', txt: '+2d8 vs dragons/liches' },
+    leech: { name: 'of the Leech', txt: 'Heals 25% dmg dealt' },
+    speed: { name: 'of Speed', txt: '30% strike twice' },
+    might: { name: 'of Might', txt: '+2 STR' },
+    precision: { name: 'of Precision', txt: '+2 to hit' },
+    magi: { name: 'of the Magi', txt: '+8 max MP' },
+    fortune: { name: 'of Fortune', txt: '+25% gold' },
+    hardened: { name: 'Hardened', txt: '+1 AC' },
+    guarded: { name: 'Guarded', txt: 'Damage taken -1' },
+    brilliant: { name: 'Brilliant', txt: '+6 max MP' },
+    meditative: { name: 'Meditative', txt: '+1 MP regen' },
+    insight: { name: 'of Insight', txt: '+2 INT' },
+    wisdomh: { name: 'of Wisdom', txt: '+2 WIS' },
+    clarity: { name: 'of Clarity', txt: '+2 MP regen' },
+    bullh: { name: 'of the Bull', txt: '+10 max HP' },
+    sturdy: { name: 'Sturdy', txt: '+1 AC' },
+    warding: { name: 'Warding', txt: 'Damage taken -2' },
+    thorned: { name: 'Thorned', txt: '1d6 thorn damage to attackers' },
+    mystic: { name: 'Mystic', txt: '+8 max MP' },
+    marsh: { name: 'Marshwalker', txt: 'Immune to marsh poison' },
+    life: { name: 'of Life', txt: '+12 max HP' },
+    regen: { name: 'of Regeneration', txt: '+2 HP regen per round' },
+    fox: { name: 'of the Fox', txt: '+2 DEX' },
+    bear: { name: 'of the Bear', txt: '+2 STR' },
+    owl: { name: 'of the Owl', txt: '+2 WIS' },
+    sage: { name: 'of the Sage', txt: '+2 INT' }
+  };
+  const POTION_TYPES = {
+    h1: { name: 'Minor Healing Potion', txt: 'Heals 2d6+4 HP' },
+    h2: { name: 'Healing Potion', txt: 'Heals 4d6+8 HP' },
+    h3: { name: 'Greater Healing Potion', txt: 'Heals 8d6+16 HP' },
+    m1: { name: 'Minor Mana Potion', txt: 'Restores 1d6+6 MP' },
+    m2: { name: 'Mana Potion', txt: 'Restores 3d6+12 MP' },
+    m3: { name: 'Greater Mana Potion', txt: 'Restores 6d6+24 MP' },
+    anti: { name: 'Antidote', txt: 'Cures poison' },
+    recall: { name: 'Recall Potion', txt: 'Teleports to Castle' }
+  };
+
+  function formatPetName(str) {
+    if (!str) return 'None';
+    const clean = String(str).replace(/^p:/, '').split('#')[0];
+    const parts = clean.split(':');
+    const [species, breed, colIdx] = parts;
+    if (typeof PET_BREEDS !== 'undefined' && PET_BREEDS[species] && PET_BREEDS[species][breed]) {
+      const b = PET_BREEDS[species][breed];
+      const c = b.colors && b.colors[colIdx || 0];
+      return `${b.name}${c ? ' (' + c.n + ')' : ''}`;
+    }
+    return clean;
+  }
+
+  function formatMagicItem(m) {
+    if (!m) return null;
+    const list = m.k === 'w' ? WEAPONS : (m.k === 'a' ? ARMORS : (m.k === 's' ? SHIELDS : HEADS));
+    const base = list[m.b] || { name: 'Item' };
+    const pre = m.pre && AFFIX[m.pre] ? AFFIX[m.pre].name + ' ' : '';
+    const suf = m.suf && AFFIX[m.suf] ? ' ' + AFFIX[m.suf].name : '';
+    const name = `${pre}${base.name}${suf} +${m.p}`;
+    const isRare = !!(m.pre && m.suf);
+    const effects = [];
+    if (m.k === 'w') effects.push(`+${m.p} to hit & dmg`);
+    else if (m.k === 'h') effects.push(`+${Math.ceil(m.p / 2)} AC`);
+    else effects.push(`+${m.p} AC`);
+    if (m.pre && AFFIX[m.pre]) effects.push(AFFIX[m.pre].txt);
+    if (m.suf && AFFIX[m.suf]) effects.push(AFFIX[m.suf].txt);
+    return { name, isRare, effects: effects.join(' • '), baseName: base.name, color: isRare ? 'var(--gold)' : 'var(--blue)' };
+  }
+
+  function renderBagSlot(itemKey, idx, inventory) {
+    if (!itemKey) return `<div class="ci-bag-slot"><span class="ci-bag-num">${idx + 1}</span><span class="dim" style="font-size:10px">empty</span></div>`;
+    let label = itemKey, desc = '', icon = '&#128230;';
+    if (itemKey === 'ration') { icon = '&#127838;'; label = 'Rations'; desc = `x${inventory.rations || 0}`; }
+    else if (itemKey.startsWith('pot:')) {
+      const pid = itemKey.slice(4);
+      const pt = POTION_TYPES[pid] || { name: pid, txt: '' };
+      icon = '&#129514;'; label = pt.name; desc = `x${(inventory.pot && inventory.pot[pid]) || 0}`;
+    } else if (itemKey === 'potions') {
+      icon = '&#129514;'; label = 'Minor Healing'; desc = `x${inventory.potions || 0}`;
+    } else if (itemKey.startsWith('p:')) {
+      icon = '&#128062;'; label = formatPetName(itemKey); desc = 'Pet';
+    } else if (itemKey.startsWith('m:')) {
+      const uid = itemKey.slice(2);
+      const mag = (inventory.magic || []).find(x => x.u === uid);
+      if (mag) {
+        const fmt = formatMagicItem(mag);
+        icon = mag.k === 'w' ? '&#9876;' : (mag.k === 'h' ? '&#129686;' : '&#128737;');
+        label = `<span style="color:${fmt.color}">${esc(fmt.name)}</span>`;
+        desc = fmt.effects;
+      }
+    } else if (itemKey.startsWith('w:')) {
+      const b = +itemKey.slice(2);
+      icon = '&#9876;'; label = (WEAPONS[b] || {}).name || 'Weapon'; desc = 'Weapon';
+    } else if (itemKey.startsWith('a:')) {
+      const b = +itemKey.slice(2);
+      icon = '&#128737;'; label = (ARMORS[b] || {}).name || 'Armour'; desc = 'Armour';
+    } else if (itemKey.startsWith('s:')) {
+      const b = +itemKey.slice(2);
+      icon = '&#128737;'; label = (SHIELDS[b] || {}).name || 'Shield'; desc = 'Shield';
+    } else if (itemKey.startsWith('h:')) {
+      const b = +itemKey.slice(2);
+      icon = '&#129686;'; label = (HEADS[b] || {}).name || 'Headgear'; desc = 'Headgear';
+    }
+    return `<div class="ci-bag-slot has-item" title="${esc(desc || label)}"><span class="ci-bag-num">${idx + 1}</span><div style="font-size:15px">${icon}</div><div style="font-weight:600;font-size:10px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;max-width:100%">${label}</div><div class="dim" style="font-size:9px">${esc(desc)}</div></div>`;
+  }
+
+  function note(text, ok) {
+    const t = document.createElement('div');
+    t.className = 'toast ' + (ok ? 'ok' : 'err'); t.textContent = text;
+    $('toasts').appendChild(t);
+    setTimeout(() => t.remove(), ok ? 4000 : 7000);
+  }
+
+  // a styled replacement for confirm()/prompt(): resolves to true/false, or the typed text (null when cancelled) when `input` is given
+  function ask(title, text, { input, value = '', ok = 'OK', type = 'text' } = {}) {
+    return new Promise(res => {
+      const d = $('dlg'), inp = $('dlgInput');
+      $('dlgTitle').textContent = title; $('dlgText').textContent = text || ''; $('dlgText').classList.toggle('hidden', !text);
+      inp.classList.toggle('hidden', !input); inp.type = type; inp.value = value; inp.placeholder = input || '';
+      $('dlgOk').textContent = ok;
+      let done = false;
+      const fin = v => { if (done) return; done = true; d.close(); res(v); };
+      $('dlgOk').onclick = () => fin(input ? inp.value : true);
+      $('dlgCancel').onclick = () => fin(input ? null : false);
+      d.onclose = () => fin(input ? null : false);
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); fin(inp.value); } };
+      d.showModal(); if (input) { inp.focus(); inp.select(); }
+    });
+  }
+
+  async function api(action, body) {
+    const r = await fetch('api.php?a=' + action, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SGL-Admin': token }, body: JSON.stringify(body || {})
+    });
+    let j; try { j = await r.json(); } catch (e) { j = { ok: false, error: 'Bad server response.' }; }
+    if (j.admin) showLogin();
+    if (!j.ok) throw new Error(j.error || 'Request failed.');
+    return j;
+  }
+  const run = fn => async (...a) => { try { await fn(...a); } catch (e) { note(e.message, false); } };
+
+  function showLogin() { token = ''; try { sessionStorage.removeItem('sgl_admin'); } catch (e) {} $('login').classList.remove('hidden'); $('panel').classList.add('hidden'); }
+  function showPanel() { $('login').classList.add('hidden'); $('panel').classList.remove('hidden'); loadAll(); }
+
+  function tab(name) {
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+    document.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== name));
+    try { sessionStorage.setItem('sgl_admin_tab', name); } catch (e) {}
+  }
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) tab(b.dataset.tab); });
+
+  const statCard = ([k, v, c]) => `<div class="stat ${c || ''}">${esc(k)}<b>${esc(v)}</b></div>`;
+
+  const loadOverview = run(async () => {
+    const o = await api('admin_overview');
+    const kb = Math.round(o.dbBytes / 1024);
+    const items = [['Accounts', o.accounts], ['Characters', o.characters], ['Online', o.online, 'green'], ['Battles', o.battles, 'red'], ['Groups', o.groups],
+      ['Day / hour', o.day + ' / ' + String(o.hour).padStart(2, '0') + ':00', 'gold'], ['Weather', o.weather, 'gold'], ['Database', kb + ' KB']];
+    $('stats').innerHTML = items.map(statCard).join('');
+    showSpawned(o.spawned);
+    showMaint(o.maintenance);
+    $('wxNow').textContent = o.weather;
+  });
+  function showSpawned(sp) {
+    if (!sp) return;
+    const L = sp.lairs;
+    const stats = [['Monsters & wildlife', sp.total, 'red'], ['Wildlife', sp.wildlife, 'green'], ['Loot bags', sp.lootBags, 'gold'],
+      ['Abandoned camps looted', sp.campsLooted + ' / ' + sp.campsTotal], ['Encampments with monsters', L.encampmentsActive + ' / ' + L.encampments],
+      ['Ruins / dungeon mouths', L.ruins + ' / ' + L.dungeons]];
+    $('spawnStats').innerHTML = stats.map(statCard).join('');
+    const tbl = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${esc(title)}</th><th style="width:60px">Now</th></tr></thead><tbody>${rows.length ? rows.map(([k, n]) => `<tr><td>${esc(k)}</td><td>${esc(n)}</td></tr>`).join('') : '<tr><td colspan="2" class="empty">none</td></tr>'}</tbody></table></div>`;
+    $('spawnTables').innerHTML = tbl('Wandering monsters (by tier)', sp.wandering) + tbl('Ruin monsters (by tier)', sp.ruins) + tbl('Dungeon-mouth monsters (by tier)', sp.dungeons) + tbl('Encampment monsters (by kind)', sp.encampments)
+      + tbl('Other', [['Harmless wildlife', sp.wildlife], ['Loot bags on the ground', sp.lootBags]]);
+  }
+
+  let maintOn = false;
+  function showMaint(on) {
+    maintOn = !!on;
+    $('maintState').textContent = on ? 'Maintenance is ON - the realm is closed (or closing).' : 'Maintenance is off - the realm is open.';
+    $('maintState').style.color = on ? 'var(--red)' : 'var(--green)';
+    $('maintToggle').textContent = on ? 'Reopen the realm' : 'Close the realm for maintenance';
+    $('maintToggle').className = on ? 'primary' : 'danger';
+    $('maintPill').innerHTML = on ? '<span class="badge ban">MAINTENANCE</span>' : '<span class="badge on">REALM OPEN</span>';
+  }
+  $('maintToggle').onclick = run(async () => {
+    if (!maintOn && !await ask('Close the realm?', 'Every player is turned away and nobody can log in until you reopen it.', { ok: 'Close realm' })) return;
+    const j = await api('admin_maintenance', { on: !maintOn });
+    showMaint(j.maintenance); note(j.msg, true); loadOverview();
+  });
+
+  const loadUsers = run(async () => {
+    const j = await api('admin_users', { q: $('q').value });
+    $('users').innerHTML = j.users.map(u => `<tr>
+      <td class="dim">${u.id}</td><td><b>${esc(u.name)}</b></td><td>${u.chars}</td><td class="dim">${when(u.lastSeen)}</td>
+      <td>${u.banned ? '<span class="badge ban">BANNED</span> ' : ''}${u.online ? '<span class="badge on">ONLINE</span>' : ''}</td>
+      <td class="act"><button class="sm" data-a="chars" data-id="${u.id}" data-n="${esc(u.name)}">Characters</button>
+          <button class="sm" data-a="rename" data-id="${u.id}" data-n="${esc(u.name)}">Rename</button>
+          <button class="sm" data-a="pass" data-id="${u.id}" data-n="${esc(u.name)}">Password</button>
+          <button class="sm" data-a="kick" data-id="${u.id}">Sign out</button>
+          <button class="sm danger" data-a="${u.banned ? 'unban' : 'ban'}" data-id="${u.id}" data-n="${esc(u.name)}">${u.banned ? 'Unban' : 'Ban'}</button>
+          <button class="sm danger" data-a="del" data-id="${u.id}" data-n="${esc(u.name)}">Delete</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No accounts.</td></tr>';
+  });
+
+  let charUser = 0;
+  const loadChars = run(async (user, name) => {
+    if (user !== undefined) charUser = user;
+    const j = await api('admin_chars', { user: charUser });
+    $('charsFor').textContent = charUser ? '(account ' + (name || charUser) + ')' : '(all accounts)';
+    $('allChars').classList.toggle('hidden', !charUser);
+    $('chars').innerHTML = j.chars.map(c => `<tr><td class="dim">${c.id}</td><td>${esc(c.account)}</td><td><button class="sm" data-a="cinspect" data-id="${c.id}" style="font-weight:700;border:none;background:none;color:var(--text);padding:0;cursor:pointer;text-align:left;font-size:14px;text-decoration:underline;text-decoration-color:rgba(251,191,36,0.3)">${esc(c.name)}</button>${c.gm ? ' <span class="badge on">GM</span>' : ''}</td>
+      <td><span class="badge cls">${esc(c.race)} ${esc(c.cls)}</span></td>
+      <td>${c.lvl}</td><td class="gold-t">${c.gold}</td><td class="act"><button class="sm primary" data-a="cinspect" data-id="${c.id}" data-n="${esc(c.name)}">Inspect</button>
+      <button class="sm" data-a="${c.gm ? 'ungm' : 'gm'}" data-id="${c.id}" data-n="${esc(c.name)}">${c.gm ? 'Remove GM' : 'Make GM'}</button>
+      <button class="sm" data-a="crename" data-id="${c.id}" data-n="${esc(c.name)}">Rename</button>
+      <button class="sm danger" data-a="cdel" data-id="${c.id}" data-n="${esc(c.name)}">Delete</button></td></tr>`).join('') || '<tr><td colspan="7" class="empty">No characters.</td></tr>';
+  });
+
+  let inspectedCharId = 0;
+  let inspectedCharData = null;
+
+  const inspectChar = run(async id => {
+    inspectedCharId = +id;
+    const res = await api('admin_char_inspect', { id: inspectedCharId });
+    const c = res.char;
+    inspectedCharData = c;
+    const d = c.data || {};
+    const party0 = (d.party && d.party[0]) || {};
+    const look = c.look || (typeof heroLook === 'function' ? heroLook(party0) : {}) || {};
+
+    $('ciName').textContent = c.name;
+    $('ciId').textContent = '#' + c.id;
+    $('ciGmBadge').classList.toggle('hidden', !c.gm);
+    $('ciRaceCls').textContent = `${c.race || party0.race || 'Human'} ${c.cls || party0.cls || 'Fighter'} (Level ${c.lvl || party0.lvl || 1})`;
+    $('ciAccLink').textContent = c.account;
+    $('ciAccLink').onclick = () => { $('charModal').close(); tab('accounts'); $('q').value = c.account; loadUsers(); };
+
+    $('ciOnlinePill').innerHTML = c.online
+      ? `<span class="badge on">&#9679; ONLINE</span>`
+      : `<span class="badge" style="background:#1e293b;color:var(--dim)">OFFLINE</span>`;
+
+    const pills = [];
+    const hp = party0.hp !== undefined ? party0.hp : (c.presence ? c.presence.hp : 0);
+    const maxHp = party0.maxHp || (c.presence ? c.presence.mhp : 10) || 10;
+    const mp = party0.mp !== undefined ? party0.mp : 0;
+    const maxMp = party0.maxMp !== undefined ? party0.maxMp : 0;
+
+    if (hp <= 0) pills.push('<span class="badge ban">FALLEN / DEAD</span>');
+    if (party0.poisoned) pills.push('<span class="badge" style="background:#164e23;color:#86efac;border:1px solid #22c55e">☠ POISONED</span>');
+    if (d.rested && d.rested.ms > 0) pills.push('<span class="badge cls">&#9790; RESTED</span>');
+    if (party0.toad) pills.push('<span class="badge" style="background:#3f2c06;color:#fde047">🐸 TOAD</span>');
+    if (c.gm) pills.push('<span class="badge on">&#9733; GM</span>');
+    if (c.presence && c.presence.battleId) pills.push('<span class="badge ban">⚔ IN BATTLE #' + c.presence.battleId + '</span>');
+    if (c.presence && c.presence.rest) pills.push('<span class="badge cls">CAMPING</span>');
+    $('ciStatusPills').innerHTML = pills.join(' ');
+
+    $('ciHpText').textContent = `${Math.max(0, hp)} / ${maxHp}`;
+    $('ciHpBar').style.width = Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100))) + '%';
+    $('ciMpText').textContent = maxMp > 0 ? `${mp} / ${maxMp}` : 'None';
+    $('ciMpBar').style.width = maxMp > 0 ? Math.max(0, Math.min(100, Math.round((mp / maxMp) * 100))) + '%' : '0%';
+    const xp = party0.xp || 0;
+    $('ciXpText').textContent = `${xp} XP`;
+    $('ciGoldText').textContent = `${d.gold || 0} Gold`;
+
+    // Render avatar canvas
+    const canvas = $('ciCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+      if (typeof drawHeroCharacterVector === 'function') {
+        drawHeroCharacterVector(ctx, 0, 0, canvas.width, c.cls || party0.cls || 'Fighter', hp <= 0, c.race || party0.race || 'Human', look);
+      }
+    } catch (err) {
+      console.error('Avatar error:', err);
+    }
+
+    // Attributes
+    const str = party0.str !== undefined ? party0.str : 10;
+    const dex = party0.dex !== undefined ? party0.dex : 10;
+    const intVal = party0.int !== undefined ? party0.int : 10;
+    const wis = party0.wis !== undefined ? party0.wis : 10;
+    const fmtMod = v => { const m = Math.floor((v - 10) / 2); return `${v} <span class="ci-attr-mod">(${m >= 0 ? '+' : ''}${m})</span>`; };
+    $('ciStr').innerHTML = fmtMod(str);
+    $('ciDex').innerHTML = fmtMod(dex);
+    $('ciInt').innerHTML = fmtMod(intVal);
+    $('ciWis').innerHTML = fmtMod(wis);
+
+    // Gear
+    let wName = 'Bare hands', wSub = '1d2 unarmed';
+    if (party0.wMag) {
+      const f = formatMagicItem(party0.wMag);
+      const baseW = WEAPONS[party0.wMag.b] || WEAPONS[0];
+      wName = `<span style="color:${f.color}">${esc(f.name)}</span>`;
+      wSub = `${baseW.dice} +${party0.wMag.p}${f.effects ? ' • ' + esc(f.effects) : ''}`;
+    } else if (party0.weaponIdx !== undefined && party0.weaponIdx >= 0) {
+      const baseW = WEAPONS[party0.weaponIdx] || WEAPONS[0];
+      wName = esc(baseW.name);
+      wSub = `${baseW.dice} • ${baseW.gun ? 'Gun (' + baseW.gun + ')' : baseW.stat + ' based'}`;
+    }
+    $('ciWName').innerHTML = wName;
+    $('ciWSub').innerHTML = wSub;
+
+    let aName = 'Unarmored', aSub = 'AC 10';
+    if (party0.aMag) {
+      const f = formatMagicItem(party0.aMag);
+      const baseA = ARMORS[party0.aMag.b] || ARMORS[0];
+      aName = `<span style="color:${f.color}">${esc(f.name)}</span>`;
+      aSub = `AC ${baseA.ac + party0.aMag.p}${f.effects ? ' • ' + esc(f.effects) : ''}`;
+    } else if (party0.armorIdx !== undefined && party0.armorIdx >= 0) {
+      const baseA = ARMORS[party0.armorIdx] || ARMORS[0];
+      aName = esc(baseA.name);
+      aSub = `AC ${baseA.ac} • Max DEX bonus: ${baseA.maxDex}`;
+    }
+    $('ciAName').innerHTML = aName;
+    $('ciASub').innerHTML = aSub;
+
+    let sName = 'None', sSub = 'No shield equipped';
+    if (party0.sMag) {
+      const f = formatMagicItem(party0.sMag);
+      const baseS = SHIELDS[party0.sMag.b] || SHIELDS[0];
+      sName = `<span style="color:${f.color}">${esc(f.name)}</span>`;
+      sSub = `AC +${baseS.ac + party0.sMag.p}${f.effects ? ' • ' + esc(f.effects) : ''}`;
+    } else if (party0.shieldIdx !== undefined && party0.shieldIdx >= 0) {
+      const baseS = SHIELDS[party0.shieldIdx] || SHIELDS[0];
+      sName = esc(baseS.name);
+      sSub = `AC +${baseS.ac}`;
+    }
+    $('ciSName').innerHTML = sName;
+    $('ciSSub').innerHTML = sSub;
+
+    let hName = 'None', hSub = 'No headgear';
+    if (party0.hMag) {
+      const f = formatMagicItem(party0.hMag);
+      const baseH = HEADS[party0.hMag.b] || HEADS[0];
+      hName = `<span style="color:${f.color}">${esc(f.name)}</span>`;
+      hSub = `AC +${baseH.ac + Math.ceil(party0.hMag.p / 2)}${baseH.mp ? ', +' + baseH.mp + ' MP' : ''}${f.effects ? ' • ' + esc(f.effects) : ''}`;
+    } else if (party0.headIdx !== undefined && party0.headIdx >= 0) {
+      const baseH = HEADS[party0.headIdx] || HEADS[0];
+      hName = esc(baseH.name);
+      hSub = `${baseH.ac ? 'AC +' + baseH.ac : ''}${baseH.mp ? ' MP +' + baseH.mp : ''}` || 'Cosmetic';
+    }
+    $('ciHName').innerHTML = hName;
+    $('ciHSub').innerHTML = hSub;
+
+    $('ciBootsVal').textContent = party0.boots ? 'Swamp Boots equipped (Immune to marsh poison)' : 'None (Vulnerable to marsh poison)';
+    $('ciBootsVal').style.color = party0.boots ? 'var(--green)' : 'var(--dim)';
+    $('ciPetVal').textContent = formatPetName(party0.pet);
+    $('ciLookVal').textContent = `Gender: ${party0.gender || 'M'}, Hair style: ${party0.hairStyle || 'default'}, Beard: ${party0.beard || 'none'}, Helm: ${party0.hideHelm ? 'Hidden' : 'Shown'}`;
+
+    // Bag (16 slots)
+    const inv = d.inventory || {};
+    const order = inv.order || [];
+    let bagHtml = '';
+    for (let i = 0; i < 16; i++) bagHtml += renderBagSlot(order[i], i, inv);
+    $('ciBagGrid').innerHTML = bagHtml;
+
+    // Consumables
+    const pots = inv.pot || {};
+    $('ciPotH1').textContent = inv.potions || 0;
+    $('ciPotH2').textContent = pots.h2 || 0;
+    $('ciPotH3').textContent = pots.h3 || 0;
+    $('ciPotM1').textContent = pots.m1 || 0;
+    $('ciPotM2').textContent = pots.m2 || 0;
+    $('ciPotM3').textContent = pots.m3 || 0;
+    $('ciPotAnti').textContent = pots.anti || 0;
+    $('ciPotRecall').textContent = pots.recall || 0;
+    $('ciRations').textContent = inv.rations || 0;
+    $('ciMeat').textContent = inv.meat || 0;
+    $('ciLeather').textContent = inv.leather || 0;
+    $('ciSextant').textContent = inv.sextant ? (inv.sextantOn ? 'Active' : 'Carried') : 'None';
+
+    // Bagged Magic items
+    const magItems = inv.magic || [];
+    if (magItems.length) {
+      $('ciBagMagic').innerHTML = magItems.map(m => {
+        const f = formatMagicItem(m);
+        return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center">
+          <span style="color:${f.color};font-weight:600;font-size:12px">${esc(f.name)}</span>
+          <span class="dim" style="font-size:11px">${esc(f.effects)}</span>
+        </div>`;
+      }).join('');
+    } else {
+      $('ciBagMagic').innerHTML = '<div class="dim" style="font-size:12px">No magic items in bag.</div>';
+    }
+
+    // World & Location
+    const mode = d.mode || 'OVERWORLD';
+    let locStr = mode;
+    if (mode === 'OVERWORLD') locStr = `Overworld (${d.ox || 0}, ${d.oy || 0})`;
+    else if (mode === 'TOWN') locStr = `Town: ${(d.town && d.town.name) || 'Settlement'} (${(d.town && d.town.x) || 0}, ${(d.town && d.town.y) || 0}) [World: ${d.ox || 0}, ${d.oy || 0}]`;
+    else if (mode === 'DUNGEON') locStr = `Dungeon: ${(d.dungeon && d.dungeon.name) || 'Dungeon'} Floor ${(d.dungeon && d.dungeon.level) || 1}`;
+    $('ciModeLoc').textContent = locStr;
+    $('ciInShip').textContent = d.inShip ? 'Yes (Sailing at sea)' : 'No (On foot)';
+
+    if (c.online && c.presence) {
+      const pr = c.presence;
+      $('ciPresenceBlock').innerHTML = `
+        <div style="color:var(--green);font-weight:700;margin-bottom:4px">&#9679; Currently active in the realm</div>
+        <div><b>Scene:</b> ${esc(pr.scene || '-')} (X: ${pr.x}, Y: ${pr.y})</div>
+        <div><b>Location:</b> ${esc(pr.loc || '-')}</div>
+        <div><b>State:</b> ${pr.rest ? 'Camping / Resting' : (pr.battleId ? 'In Combat' : (pr.idle ? 'AFK' : 'Active'))}</div>
+        <div class="dim" style="margin-top:2px">Last update: ${when(pr.updated)}</div>
+      `;
+    } else {
+      $('ciPresenceBlock').innerHTML = `<div class="dim">Player is offline. Character last saved: ${when(c.updated)}</div>`;
+    }
+
+    const ships = d.ships || [];
+    if (ships.length) {
+      $('ciShipsTable').innerHTML = ships.map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.port || '-')}</td><td>${s.x}, ${s.y}</td></tr>`).join('');
+    } else {
+      $('ciShipsTable').innerHTML = '<tr><td colspan="3" class="empty">No ships owned.</td></tr>';
+    }
+
+    // Raw JSON
+    $('ciJson').textContent = JSON.stringify(c, null, 2);
+
+    // Actions
+    $('ciGmBtn').textContent = c.gm ? 'Remove GM' : 'Make GM';
+
+    // Reset subtab to gear
+    document.querySelectorAll('#ciTabs button').forEach(x => x.classList.toggle('on', x.dataset.citab === 'gear'));
+    document.querySelectorAll('[data-cipane]').forEach(p => p.classList.toggle('hidden', p.dataset.cipane !== 'gear'));
+
+    $('charModal').showModal();
+  });
+
+  $('ciTabs').addEventListener('click', e => {
+    const b = e.target.closest('button[data-citab]');
+    if (b) {
+      document.querySelectorAll('#ciTabs button').forEach(x => x.classList.toggle('on', x === b));
+      document.querySelectorAll('[data-cipane]').forEach(p => p.classList.toggle('hidden', p.dataset.cipane !== b.dataset.citab));
+    }
+  });
+
+  $('ciCloseBtn').onclick = () => $('charModal').close();
+  $('ciModalCloseX').onclick = () => $('charModal').close();
+
+  $('ciHomeBtn').onclick = run(async () => {
+    if (!inspectedCharId || !inspectedCharData) return;
+    if (!await ask('Send character home?', `Send ${inspectedCharData.name} back to Castle Stargazer overworld spawn?`, { ok: 'Send home' })) return;
+    const res = await api('admin_char_home', { id: inspectedCharId });
+    note(res.msg, true);
+    await inspectChar(inspectedCharId);
+    loadChars();
+  });
+
+  $('ciGmBtn').onclick = run(async () => {
+    if (!inspectedCharId || !inspectedCharData) return;
+    const isGm = inspectedCharData.gm;
+    const res = await api('admin_char_gm', { id: inspectedCharId, gm: !isGm });
+    note(res.msg, true);
+    await inspectChar(inspectedCharId);
+    loadChars();
+  });
+
+  $('ciRenameBtn').onclick = run(async () => {
+    if (!inspectedCharId || !inspectedCharData) return;
+    const n = inspectedCharData.name;
+    const v = await ask('Rename character', 'New name for ' + n + ' (max. 20 characters):', { input: 'Character name', value: n, ok: 'Rename' });
+    if (!v) return;
+    const res = await api('admin_char_rename', { id: inspectedCharId, name: v });
+    note(res.msg, true);
+    await inspectChar(inspectedCharId);
+    loadChars();
+  });
+
+  $('ciDelBtn').onclick = run(async () => {
+    if (!inspectedCharId || !inspectedCharData) return;
+    const n = inspectedCharData.name;
+    if (!await ask('Delete character', 'Delete character ' + n + '? This cannot be undone.', { ok: 'Delete' })) return;
+    const res = await api('admin_char_delete', { id: inspectedCharId });
+    note(res.msg, true);
+    $('charModal').close();
+    loadChars();
+  });
+
+  $('ciCopyJson').onclick = () => {
+    try {
+      navigator.clipboard.writeText($('ciJson').textContent);
+      note('Character JSON copied to clipboard.', true);
+    } catch (e) {
+      note('Failed to copy JSON: ' + e.message, false);
+    }
+  };
+
+  function loadAll() { loadOverview(); loadUsers(); loadChars(0); }
+
+  $('loginForm').addEventListener('submit', run(async e => {
+    e.preventDefault();
+    const j = await api('admin_login', { password: $('pw').value });
+    token = j.token; $('pw').value = '';
+    try { sessionStorage.setItem('sgl_admin', token); } catch (err) {}
+    note('Signed in.', true); showPanel();
+  }));
+  $('logout').onclick = run(async () => { await api('admin_logout'); showLogin(); note('Signed out.', true); });
+  $('refresh').onclick = loadAll;
+  $('search').onclick = loadUsers;
+  $('allChars').onclick = () => loadChars(0);
+  $('q').addEventListener('keydown', e => { if (e.key === 'Enter') loadUsers(); });
+
+  document.addEventListener('click', run(async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const id = +b.dataset.id, n = b.dataset.n, a = b.dataset.a;
+    if (a === 'cinspect') { return inspectChar(id); }
+    if (a === 'chars') { tab('chars'); return loadChars(id, n); }
+    if (a === 'kick') { note((await api('admin_kick', { id })).msg, true); return loadOverview(); }
+    if (a === 'rename') { const v = await ask('Rename account', 'New name for ' + n + ':', { input: 'Account name', value: n, ok: 'Rename' }); if (!v) return; note((await api('admin_user_update', { id, name: v })).msg, true); return loadAll(); }
+    if (a === 'pass') { const v = await ask('Change password', 'New password for ' + n + ' (min. 6 characters). The player is signed out.', { input: 'New password', ok: 'Change', type: 'password' }); if (!v) return; note((await api('admin_user_update', { id, password: v })).msg, true); return loadUsers(); }
+    if (a === 'del') { if (!await ask('Delete account', 'Delete account ' + n + ' and ALL its characters? This cannot be undone.', { ok: 'Delete' })) return; note((await api('admin_user_delete', { id })).msg, true); return loadAll(); }
+    if (a === 'ban') { if (!await ask('Ban account', 'Ban ' + n + '? They are signed out and cannot log in until unbanned.', { ok: 'Ban' })) return; note((await api('admin_ban', { id, ban: true })).msg, true); return loadUsers(); }
+    if (a === 'unban') { note((await api('admin_ban', { id, ban: false })).msg, true); return loadUsers(); }
+    if (a === 'crename') { const v = await ask('Rename character', 'New name for ' + n + ' (max. 20 characters). If someone is playing it they return to character selection.', { input: 'Character name', value: n, ok: 'Rename' }); if (!v) return; note((await api('admin_char_rename', { id, name: v })).msg, true); return loadAll(); }
+    if (a === 'gm' || a === 'ungm') { note((await api('admin_char_gm', { id, gm: a === 'gm' })).msg, true); return loadChars(); }
+    if (a === 'cdel') { if (!await ask('Delete character', 'Delete character ' + n + '? This cannot be undone.', { ok: 'Delete' })) return; note((await api('admin_char_delete', { id })).msg, true); return loadAll(); }
+  }));
+
+  document.querySelectorAll('button[data-wx]').forEach(b => b.onclick = run(async () => {
+    const j = await api('admin_weather', { kind: b.dataset.wx, hours: +$('wxHours').value || 6 });
+    note(j.msg, true); loadOverview();
+  }));
+
+  $('purgeBags').onclick = run(async () => {
+    if (!await ask('Purge bags', 'Remove ALL dropped loot bags from the world?', { ok: 'Purge' })) return;
+    note((await api('admin_purge_bags')).msg, true); loadOverview();
+  });
+
+  $('reset').onclick = run(async () => {
+    const accounts = $('rAcc').checked;
+    if (!await ask('Reset the world', accounts ? 'This deletes ALL ACCOUNTS and characters. Continue?' : 'Reset the world now?', { ok: 'Reset' })) return;
+    const j = await api('admin_world_reset', { confirm: $('rConfirm').value, chars: $('rChars').value, accounts });
+    $('rConfirm').value = ''; note(j.msg, true); loadAll();
+  });
+
+  if (token) { showPanel(); try { tab(sessionStorage.getItem('sgl_admin_tab') || 'overview'); } catch (e) {} }
+})();
+</script>
+</body>
+</html>

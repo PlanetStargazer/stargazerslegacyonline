@@ -1,0 +1,14 @@
+# Local SQLite Database & runtime state
+server/data/*.sqlite
+server/data/*.sqlite-journal
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+*.sqlite
+*.sqlite-journal
+
+# Logs & temp files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
