@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE STARGAZER'S LEGACY // Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27%23020617%27/%3E%3Cpath d=%27M16 4l3 8 9 .8-6.8 5.6 2.2 8.6L16 22l-7.4 5 2.2-8.6L4 12.8 13 12z%27 fill=%27%23fbbf24%27/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col p-2 sm:p-3 gap-2 bg-slate-950 text-slate-100">
+    <header class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-900/90 gold-border shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-amber-400 animate-pulse shadow-[0_0_10px_#fbbf24]"></div>
+            <div>
+                <h1 class="font-cinzel text-sm sm:text-base font-extrabold tracking-widest text-amber-400">THE STARGAZER'S LEGACY <span class="text-emerald-400 text-[10px] align-middle tracking-[.3em]">ONLINE</span></h1>
+                <p id="location-subtitle" class="text-[10px] text-cyan-400 tracking-wider">REALM OF TERRA // OVERWORLD</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+            <div class="hud-stat" id="hud-mode" style="color:#67e8f9"><span data-icon="compass"></span><span id="stat-mode">OVERWORLD</span></div>
+            <div class="hud-stat" id="hud-local" style="color:#cbd5e1"><span data-icon="clock"></span><span id="stat-local">--:--</span></div>
+            <div class="hud-stat" id="hud-time" style="color:#fde68a"><span id="stat-time-ico" data-icon="sun"></span><span id="stat-time">Day 1, 08:00</span></div>
+            <div class="hud-stat" id="hud-moons" style="color:#d8b4fe"><span data-icon="moon"></span><span id="stat-moons">0 • 0</span></div>
+            <div class="hud-stat" id="hud-online" style="color:#86efac" title="Players online"><span id="conn-dot" class="conn-dot"></span><span id="stat-online">offline</span></div>
+            <div class="hud-stat hidden" id="hud-fortune" style="color:#86efac"></div>
+            <div class="hud-stat hidden" id="hud-rested" style="color:#86efac"><span data-icon="moon"></span><span id="stat-rested">0:00</span></div>
+            <div class="hud-stat" id="hud-rations" style="color:#fcd34d"><span data-icon="bread"></span><span id="stat-rations">2</span></div>
+            <div class="hud-stat" id="hud-gold" style="color:#fbbf24"><span data-icon="coins"></span><span id="stat-gold">250</span></div>
+            <button id="btn-jukebox" class="hud-btn" style="color:#f0abfc" title="Jukebox"><span data-icon="music"></span>JUKEBOX</button>
+            <button id="btn-settings" class="hud-btn" style="color:#fcd34d" data-tip-cmd="menu"><span data-icon="gear"></span>MENU</button>
+            <button id="btn-help" class="hud-btn" data-tip-cmd="help"><span data-icon="book"></span></button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col md:flex-row gap-2 min-h-0 min-w-0 overflow-hidden">
+        <!-- Left/Center Viewport & Controls -->
+        <section class="flex-1 flex flex-col gap-2 min-h-0 min-w-0">
+            <!-- Vector Canvas Container -->
+            <div id="canvas-wrapper" class="relative flex-1 bg-slate-950 rounded-lg gold-border overflow-hidden min-h-[240px]">
+                <canvas id="game-canvas" class="absolute inset-0 w-full h-full block"></canvas>
+
+                <!-- Action Direction Prompt Overlay -->
+                <div id="action-prompt" class="hidden absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-xs font-bold tracking-wider backdrop-blur-md">
+                    SELECT DIRECTION (W/A/S/D or ARROWS) — [ESC] CANCEL
+                </div>
+                <div id="target-prompt" class="hidden absolute top-3 left-1/2 -translate-x-1/2 max-w-[94%] text-center px-4 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-200 text-[11px] font-bold tracking-wider backdrop-blur-md" style="z-index:5"></div>
+
+                <div id="sel-info" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 max-w-[94%] px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-600 text-[11px] text-slate-200 pointer-events-none"></div>
+                <div id="conn-banner" class="hidden absolute top-14 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-rose-500/20 border border-rose-400 text-rose-200 text-xs font-bold tracking-wider backdrop-blur-md">CONNECTION LOST - RETRYING...</div>
+                <div id="battle-hud" class="hidden absolute top-12 left-1/2 -translate-x-1/2 max-w-[94%] text-center px-4 py-1.5 rounded-lg bg-slate-950/85 border border-cyan-500/50 text-[11px] text-cyan-100 backdrop-blur-md"></div>
+                <div id="join-prompt" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 max-w-[94%] px-4 py-2.5 rounded-xl bg-slate-950/92 border-2 border-amber-400 text-xs text-amber-100 backdrop-blur-md shadow-2xl flex flex-col sm:flex-row items-center gap-3">
+                    <span id="join-text" class="font-bold"></span>
+                    <span class="flex gap-2">
+                        <button id="join-yes" class="px-3 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold">[Y] JOIN THE BATTLE</button>
+                        <button id="join-no" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold">[N] NOT NOW</button>
+                    </span>
+                </div>
+                <div id="invite-prompt" class="hidden absolute top-24 right-3 max-w-[18rem] px-3 py-2.5 rounded-xl bg-slate-950/92 border-2 border-emerald-400 text-xs text-emerald-100 backdrop-blur-md shadow-2xl flex flex-col gap-2">
+                    <span id="invite-text" class="font-bold"></span>
+                    <span class="flex gap-2">
+                        <button id="invite-yes" class="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold">ACCEPT</button>
+                        <button id="invite-no" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold">DECLINE</button>
+                    </span>
+                </div>
+
+                <!-- Look / Inspect Panel -->
+                <div id="look-panel" class="hidden absolute left-2.5 bottom-2.5 max-w-[24rem] w-[calc(100%-1.25rem)] pointer-events-none rounded-lg bg-slate-950/90 border border-amber-500/60 backdrop-blur-md p-2.5 text-xs shadow-lg">
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-300 font-bold tracking-wider text-[10px]">&#128065; LOOK</span>
+                        <span id="look-title" class="font-bold text-sm text-cyan-200"></span>
+                    </div>
+                    <div id="look-body" class="mt-1 space-y-0.5 text-slate-300 leading-snug"></div>
+                    <div id="look-hint" class="mt-1.5 pt-1.5 border-t border-slate-800 text-[10px] text-slate-500"></div>
+                </div>
+
+                <!-- Zoom controls -->
+                <div id="zoom-ctl" class="zoom-ctl">
+                    <button id="btn-zoom-in" class="zbtn" data-tip-cmd="zoomin"><span data-icon="plus"></span></button>
+                    <div id="zoom-label" class="zlbl">100%</div>
+                    <button id="btn-zoom-out" class="zbtn" data-tip-cmd="zoomout"><span data-icon="minus"></span></button>
+                </div>
+
+                <!-- Mode Banner Overlay -->
+                <div class="absolute top-2.5 left-2.5 pointer-events-none flex flex-col gap-1">
+                    <div id="coords-badge" class="px-2.5 py-1 rounded bg-slate-950/85 border border-slate-800 text-[11px] text-slate-300">
+                        POS: 625, 133 | LOS: 7
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action bar: Auto-Attack to start with; the player adds spells and potions -->
+            <div id="hotbar" class="hotbar gold-border"></div>
+
+            <!-- Bottom Tactical & Navigation Controls -->
+            <div class="ctl-bar gold-border">
+                <!-- Directional Pad -->
+                <div class="dpad">
+                    <button data-dir="N" class="dir-btn" data-tip-cmd="N"><span data-icon="up"></span></button>
+                    <button data-dir="W" class="dir-btn" data-tip-cmd="W"><span data-icon="left"></span></button>
+                    <button data-dir="S" class="dir-btn" data-tip-cmd="S"><span data-icon="down"></span></button>
+                    <button data-dir="E" class="dir-btn" data-tip-cmd="E"><span data-icon="right"></span></button>
+                </div>
+
+                <!-- Command Hotkeys -->
+                <div id="command-grid" class="cmd-grid">
+                    <button id="btn-enter" class="cmd" style="--c:251,191,36" data-tip-cmd="enter"><kbd>E</kbd><span data-icon="door"></span>ENTER</button>
+                    <button id="btn-auto" class="cmd" style="--c:244,63,94" data-tip-cmd="auto"><kbd>Q</kbd><span data-icon="target"></span>AUTO</button>
+                    <button id="btn-cast" class="cmd" style="--c:34,211,238" data-tip-cmd="cast"><kbd>C</kbd><span data-icon="sparkles"></span>CAST</button>
+                    <button id="btn-camp" class="cmd" style="--c:52,211,153" data-tip-cmd="camp"><kbd>R</kbd><span data-icon="tent"></span>CAMP</button>
+                    <button id="btn-ship" class="cmd" style="--c:129,140,248" data-tip-cmd="ship"><kbd>X</kbd><span data-icon="anchor"></span>SHIP</button>
+                    <button id="btn-inventory" class="cmd" style="--c:192,132,252" data-tip-cmd="inventory"><kbd>I</kbd><span data-icon="backpack"></span>GEAR</button>
+                    <button id="btn-worldmap" class="cmd" style="--c:45,212,191" data-tip-cmd="map"><kbd>M</kbd><span data-icon="map"></span>MAP</button>
+                    <button id="btn-pass" class="cmd" style="--c:148,163,184" data-tip-cmd="pass"><kbd>&#9251;</kbd><span data-icon="hourglass"></span>WAIT</button>
+                    <button id="btn-flee" class="cmd" style="--c:250,204,21" data-tip-cmd="flee"><kbd>F</kbd><span data-icon="run"></span>FLEE</button>
+                    <button id="btn-look" class="cmd" style="--c:56,189,248" data-tip-cmd="look"><kbd>L</kbd><span data-icon="eye"></span>LOOK</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar: Party Roster & Chronicle Log -->
+        <aside class="w-full md:w-80 lg:w-96 flex flex-col gap-2 min-h-0 shrink-0">
+            <!-- Party Status Panel -->
+            <div class="bg-slate-900/90 p-3 rounded-lg gold-border flex flex-col gap-2 shrink-0">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <h2 class="font-cinzel text-xs font-bold tracking-wider text-amber-400">THY CHAMPION</h2>
+                    <span id="header-potions-badge" class="text-[11px] text-emerald-400 font-bold">🧪 POTIONS: 2</span>
+                </div>
+                <div id="party-container" class="grid grid-cols-1 gap-1.5"></div>
+                <div id="group-container" class="grid grid-cols-1 gap-1.5"></div>
+            </div>
+
+            <!-- Chronicle / Chat / Players -->
+            <div class="flex-1 bg-slate-900/90 p-3 rounded-lg gold-border flex flex-col gap-2 min-h-[140px] overflow-hidden">
+                <div class="flex items-center gap-1 border-b border-slate-800 pb-1.5">
+                    <button class="side-tab on" data-tab="log">LOG</button>
+                    <button class="side-tab" data-tab="chat">CHAT<span id="chat-badge" class="hidden"></span></button>
+                    <button class="side-tab" data-tab="players">PLAYERS<span id="players-badge" class="hidden"></span></button>
+                    <button class="side-tab" data-tab="friends">FRIENDS</button>
+                    <span class="flex-1"></span>
+                    <span class="text-[10px] text-slate-500">[Enter] chat</span>
+                </div>
+                <div id="tab-log" class="side-pane"><div id="message-log" class="flex-1 overflow-y-auto space-y-1 text-xs font-mono pr-1"></div></div>
+                <div id="tab-chat" class="side-pane hidden">
+                    <div id="chat-log" class="flex-1 overflow-y-auto space-y-0.5 text-xs pr-1"></div>
+                    <div class="flex gap-1 pt-1">
+                        <select id="chat-ch" class="chat-sel"><option value="world">World</option><option value="local">Here</option><option value="group">Group</option></select>
+                        <input id="chat-input" type="text" maxlength="240" autocomplete="off" spellcheck="false" placeholder="Say something... (/w name hi, /g, /l, /invite name)" class="flex-1 min-w-0 px-2 py-1 rounded bg-slate-950 border border-slate-700 text-xs text-white focus:border-amber-400 focus:outline-none" />
+                        <button id="chat-send" class="px-2 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">SEND</button>
+                    </div>
+                </div>
+                <div id="tab-friends" class="side-pane hidden">
+                    <div class="flex gap-1 pb-1">
+                        <input id="friend-input" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Add a friend: character or account name" class="flex-1 min-w-0 px-2 py-1 rounded bg-slate-950 border border-slate-700 text-amber-200 text-xs focus:outline-none focus:border-amber-400" />
+                        <button id="friend-add" class="px-2 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">ADD</button>
+                    </div>
+                    <div id="friends-list" class="flex-1 overflow-y-auto space-y-1 text-xs pr-1"></div>
+                </div>
+                <div id="tab-players" class="side-pane hidden">
+                    <div id="group-box" class="mb-2 text-[11px] text-slate-500 px-1"></div>
+                    <div id="players-list" class="flex-1 overflow-y-auto space-y-1 text-xs pr-1"></div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Inventory & Equipment Inspector Modal -->
+    <div id="inventory-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-3xl w-full p-5 flex flex-col gap-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">CHARACTER</h3>
+                    <p class="text-[11px] text-slate-400">Equip gear from thy bag onto the paper doll • <span style="color:#60a5fa">blue</span> = magic, <span style="color:#facc15">gold</span> = rare</p>
+                </div>
+                <button id="btn-close-inventory" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">✕ CLOSE [ESC]</button>
+            </div>
+
+            <div id="inventory-hero-tabs" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+
+            <div class="flex gap-1.5 border-b border-slate-800 -mb-2">
+                <button class="inv-tab-btn active" data-tab="equip">⚔ EQUIPMENT</button>
+                <button class="inv-tab-btn" data-tab="grimoire">✦ GRIMOIRE</button>
+            </div>
+            <div id="inv-tab-equip" class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                <div class="md:col-span-6 flex flex-col gap-2.5">
+                    <div>
+                        <div id="inv-hero-name" class="font-cinzel text-sm font-bold text-amber-300">Aethel</div>
+                        <div id="inv-hero-meta" class="text-xs text-cyan-400">Lv1 Human Paladin</div>
+                        <div id="inv-hero-xp" class="text-[11px] text-slate-400">XP: 0 / 100</div>
+                    </div>
+                    <div class="paperdoll">
+                        <div id="pd-weapon" class="eq-slot" data-slot="w"></div>
+                        <canvas id="inventory-hero-canvas" width="150" height="190" class="pd-canvas"></canvas>
+                        <div id="pd-armor" class="eq-slot" data-slot="a"></div>
+                        <div id="pd-shield" class="eq-slot" data-slot="s"></div>
+                        <div id="pd-helm" class="eq-slot" data-slot="helm"></div>
+                        <div id="pd-boots" class="eq-slot" data-slot="boots"></div>
+                        <div class="pd-note"><span id="inv-equip-extra"></span></div>
+                        <div id="pd-pet" class="eq-slot" data-slot="pet"></div>
+                    </div>
+                    <label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+                        <input id="inv-hide-helm" type="checkbox" class="accent-amber-400"> Hide headgear (show hair instead)
+                    </label>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs bg-slate-900 p-2.5 rounded border border-slate-800">
+                        <div>HP: <b id="inv-stat-hp" class="text-emerald-400">11/11</b></div>
+                        <div id="inv-mp-cell">MP: <b id="inv-stat-mp" class="text-cyan-300">20/20</b></div>
+                        <div>AC: <b id="inv-stat-ac" class="text-sky-300">10</b></div>
+                        <div>ATK: <b id="inv-stat-atk" class="text-amber-300">+2</b></div>
+                        <div>STR: <b id="inv-stat-str" class="text-white">17</b></div>
+                        <div>DEX: <b id="inv-stat-dex" class="text-white">14</b></div>
+                        <div>INT: <b id="inv-stat-int" class="text-white">10</b></div>
+                        <div>WIS: <b id="inv-stat-wis" class="text-white">15</b></div>
+                    </div>
+
+                </div>
+
+                <div class="md:col-span-6 flex flex-col gap-3">
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-400 tracking-wider mb-1.5">BAG <span id="inv-bag-count" class="text-slate-400 font-normal">0/16</span></h4>
+                        <div id="inv-bag-grid" class="bag-list"></div>
+                        <p class="text-[10px] text-slate-500 mt-1">Click an item to use or equip it, right-click a potion to drink it, click a worn item to take it off - or drag between bag and doll. Potions and rations stack.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="inv-tab-grimoire" class="hidden bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                    <div>
+                        <h4 id="inv-spells-title" class="text-xs font-bold text-purple-300 tracking-wider mb-1.5">GRIMOIRE</h4>
+                        <div id="inv-spells-list" class="space-y-1  pr-1"></div>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NPC Keyword Dialogue & Trade Modal -->
+    <div id="dialogue-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-xl w-full p-4 flex flex-col gap-3 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div class="flex items-center gap-3">
+                    <canvas id="npc-portrait-canvas" width="56" height="56" class="w-14 h-14 rounded-lg bg-slate-950 border border-amber-500/50 shrink-0"></canvas>
+                    <div>
+                        <h3 id="dialogue-npc-name" class="font-cinzel text-sm font-bold text-amber-400 tracking-wider">LORD STARGAZER</h3>
+                        <p id="dialogue-npc-title" class="text-[11px] text-cyan-400">Leader of the Realm</p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-1 text-xs">
+                    <div class="flex gap-3">
+                        <span id="dialogue-gold-display" class="text-amber-400 font-bold">GOLD: 250</span>
+                        <span id="dialogue-stam-display" class="text-emerald-400 font-bold">RATIONS: 2</span>
+                    </div>
+                    <button id="btn-dialogue-close" class="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]">✕ BYE [ESC]</button>
+                </div>
+            </div>
+
+            <div id="dialogue-transcript" class="bg-slate-950 p-3 rounded-lg border border-slate-800 h-36 overflow-y-auto space-y-1.5 text-xs font-mono"></div>
+
+            <div id="dialogue-trade-panel" class="hidden bg-slate-950 p-2.5 rounded-lg border border-amber-500/40 max-h-48 overflow-y-auto space-y-1.5"></div>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[10px] text-slate-400 mr-1">TOPICS:</span>
+                <div id="dialogue-kw-bar" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div class="flex gap-2">
+                <input id="dialogue-input" type="text" placeholder="Type command (NAME, JOB, BUY, SELL, HEAL, TRAIN, BYE)..." class="flex-1 px-3 py-1.5 rounded bg-slate-950 border border-slate-700 text-xs text-white focus:border-amber-400 focus:outline-none" />
+                <button id="btn-dialogue-send" class="px-4 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">ASK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- World Map Modal -->
+    <div id="worldmap-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-4xl w-full p-4 flex flex-col gap-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">CARTOGRAPHY OF TERRA (2400 x 1200)</h3>
+                    <p class="text-[11px] text-slate-400">Gold = Castles &amp; Towns • Green = Villages (1 Service) • Cyan = Ports • Red = Dungeons • Purple = Moongates • Blue lines = Rivers • Olive = Marshes</p>
+                </div>
+                <button id="btn-close-worldmap" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">✕ CLOSE [ESC]</button>
+            </div>
+            <div class="relative w-full aspect-[2/1] bg-slate-950 rounded-lg overflow-hidden border border-slate-800">
+                <canvas id="full-worldmap-canvas" width="600" height="300" class="w-full h-full block"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ship naming (after buying a deed) -->
+    <div id="ship-name-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" style="z-index:70">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl">
+            <h3 class="font-cinzel text-sm font-bold text-cyan-400 tracking-wider">&#9875; NAME THY SHIP</h3>
+            <p id="ship-name-desc" class="text-xs text-slate-300"></p>
+            <input id="ship-name-input" type="text" maxlength="24" autocomplete="off" spellcheck="false" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-amber-200 text-sm focus:outline-none focus:border-cyan-400">
+            <div class="flex gap-2">
+                <button id="btn-ship-name-ok" class="flex-1 py-1.5 px-2 rounded bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 text-xs font-bold">[Enter] Launch her</button>
+                <button id="btn-ship-name-random" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs font-bold">&#127922; Random</button>
+            </div>
+            <p class="text-[10px] text-slate-500">[Esc] lets the harbour master choose a name.</p>
+        </div>
+    </div>
+
+    <!-- Spellcasting & Combat Potion Modal -->
+    <div id="spell-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-3xl w-full p-4 flex flex-col gap-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 id="spell-modal-title" class="font-cinzel text-sm font-bold text-cyan-400 tracking-wider">SELECT SPELL OR POTION</h3>
+                <button id="btn-close-spell" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">✕ [ESC]</button>
+            </div>
+            <div id="spell-list" class="flex flex-col gap-2 max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Help / Compendium Manual Modal -->
+    <div id="help-modal" class="hidden fixed inset-0 z-[70] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-3xl w-full p-5 flex flex-col gap-4 text-xs leading-relaxed shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <div>
+                    <h3 class="font-cinzel text-lg font-bold text-amber-400 tracking-wider">COMPENDIUM OF THE STARGAZER // ADVENTURER'S MANUAL</h3>
+                    <p class="text-[11px] text-cyan-400">Complete Guide to Ancestries, Classes, Attributes, Combat, Loot &amp; Progression</p>
+                </div>
+                <button id="btn-close-help" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold">✕ CLOSE</button>
+            </div>
+
+            <div id="manual-tabs" class="flex flex-wrap gap-1.5 border-b border-slate-800 -mt-1">
+                <button class="man-tab-btn active" data-mtab="basics">BASICS</button>
+                <button class="man-tab-btn" data-mtab="folk">ANCESTRIES &amp; CLASSES</button>
+                <button class="man-tab-btn" data-mtab="fighter">FIGHTER</button>
+                <button class="man-tab-btn" data-mtab="paladin">PALADIN</button>
+                <button class="man-tab-btn" data-mtab="ranger">RANGER</button>
+                <button class="man-tab-btn" data-mtab="rogue">ROGUE</button>
+                <button class="man-tab-btn" data-mtab="cleric">CLERIC</button>
+                <button class="man-tab-btn" data-mtab="wizard">WIZARD</button>
+                <button class="man-tab-btn" data-mtab="bard">BARD</button>
+                <button class="man-tab-btn" data-mtab="tinker">TINKER</button>
+                <button class="man-tab-btn" data-mtab="online">PLAYING ONLINE</button>
+                <button class="man-tab-btn" data-mtab="bestiary">BESTIARY</button>
+            </div>
+            <div class="man-tab" data-mtab="basics">
+                <div class="text-slate-300" style="column-count:2;column-gap:12px">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-amber-400 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">1. CORE ATTRIBUTES</h4>
+                    <p><strong class="text-white">STR (Strength):</strong> Melee to-hit and damage modifier (<code class="text-amber-300">(score − 10) ÷ 2</code>). Heavy weapons (Broadswords, Halberds, Maces) rely on it.</p>
+                    <p><strong class="text-white">DEX (Dexterity):</strong> Adds to <b class="text-white">Armor Class</b> (capped by heavy armor), weapons of finesse (Daggers, Astral Blade), <b class="text-white">Hunting Bows</b> and <b class="text-white">firearms</b>, and boosts escape odds when fleeing.</p>
+                    <p><strong class="text-white">INT (Intelligence):</strong> Governs Arcane spells: spell saving-throw DC, spell power, and bonus mana for Wizards, Rangers, <b class="text-white">Tinkers</b> (gadgets &amp; constructs) and, alongside WIS, <b class="text-white">Bards</b>.</p>
+                    <p><strong class="text-white">WIS (Wisdom):</strong> Governs divine prayers (Heal, Cure, Harm, Resurrect) and provides mana for Clerics, Paladins, Rangers, and Bards. <b class="text-white">Fighters and Rogues command no mana.</b></p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-pink-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">2. YOUR HERO &amp; ADVANCEMENT</h4>
+                    <p><strong class="text-pink-300">Champion Customization:</strong> Every adventurer controls a unique champion. Tailor gender, hair color, hair style and beard; equipped weapons, armor, headgear and shields appear in full vector detail on your avatar. Tailors and barbers in major settlements allow cosmetic changes.</p>
+                    <p><strong class="text-emerald-400">Leveling Up:</strong> Every monster slain grants its full <code class="text-amber-300">XP</code> to <b class="text-white">every adventurer on the battlefield</b>, and gold spoils are divided fairly. At <code class="text-amber-300">Level × 100 XP</code> visit <b class="text-white">Lord Stargazer</b> or any settlement Lord to <code class="text-amber-300">TRAIN</code>. Each level rolls your class hit die for maximum HP (never less than half the die) plus +2 hardiness (+1 more for Dwarves and Automata). Spellcasters gain mana, and every even level grants +1 to your two primary attributes up to the maximum level of <code class="text-amber-300">20</code>.</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-rose-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">3. COMBAT &amp; AUTO-ATTACK</h4>
+                    <p><strong class="text-rose-300">D20 Combat System:</strong> Attacks roll <code class="text-amber-300">d20 + proficiency bonus + attribute modifier</code> against the target's total <b class="text-white">Armor Class</b>. Rolling a natural 20 lands a critical strike for double damage dice; a natural 1 always misses. Sleeping foes are hit automatically. Proficiency begins at +2 and scales every 4 levels.</p>
+                    <p><strong class="text-red-300">Targeting &amp; Auto-Attack:</strong> Click any enemy on the battlefield to lock targeting (red targeting reticle). Press <code class="text-amber-300">[Q]</code> or the <b class="text-white">AUTO</b> button to automatically attack that enemy each turn; if out of range, your hero waits until they close in. Auto-attack continues until the target falls or you press <code class="text-amber-300">[Q]</code> again. Walking into an enemy strikes them in melee.</p>
+                    <p><strong class="text-yellow-300">Fleeing:</strong> Press <code class="text-amber-300">[F]</code> during battle to attempt escape. Heroes with high DEX, standing near the left border, or facing wounded or sleeping foes enjoy greater escape odds.</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-purple-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">4. MAGIC &amp; THE GRIMOIRE</h4>
+                    <p><strong class="text-cyan-300">Spellcasting:</strong> Press <code class="text-amber-300">[C]</code> to access spells and consumables. Spells expend mana only—no components required. Status effects and lethal spells allow targets a saving throw against your Spell DC (<code class="text-amber-300">8 + proficiency + INT/WIS</code>). Summons fight alongside you for multiple rounds, and elemental barrier fields cordon off corridors.</p>
+                    <p><strong class="text-sky-300">Target Selection:</strong> Aimed projectile spells and restorative prayers allow you to target specific tiles or companions using arrow keys, WASD, or direct clicking. Blast and cone spells highlight all targets in their area of effect.</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-emerald-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">5. TRAVEL, RIVERS &amp; THE SEAS</h4>
+                    <p><strong class="text-cyan-300">Sailing &amp; Ships:</strong> Broad oceans require sea vessels. Purchase a <b class="text-white">Ship Deed</b> (<code class="text-amber-300">400 gold</code>) from any harbor master to commission your frigate. Board or disembark by pressing <code class="text-amber-300">[X]</code> adjacent to your ship or coastlines.</p>
+                    <p><strong class="text-lime-300">Rivers, Bridges &amp; Swamps:</strong> Major waterways cannot be waded through on foot; seek stone bridges to cross safely. Marshes can cause deadly <b class="text-white">Poison</b> that ticks down HP every second until cured by a healer, an inn rest, camping, or the Cleric's <b class="text-white">Cure</b> spell. Equipping <b class="text-white">Swamp Boots</b> grants total immunity to marsh poison.</p>
+                    <p><strong class="text-purple-300">Moongates &amp; Vision:</strong> Daylight allows 7-tile vision; night restricts sight to 2 tiles. Eight mystic Moongates open portals keyed to the phases of the twin moons <b class="text-white">Astra</b> &amp; <b class="text-white">Luna</b>.</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-indigo-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">6. TIME, CAMPING &amp; INNS</h4>
+                    <p><strong class="text-indigo-300">The Living World Clock:</strong> Time marches forward continuously: <b class="text-white">1 game hour equals 2 real minutes</b> (a full game day spans 48 minutes). Towns and castles light lanterns at dusk.</p>
+                    <p><strong class="text-amber-400">Camping &amp; Inns:</strong> Renting an inn bed (<code class="text-amber-300">2 gold</code>) or pitching camp in the wild (<code class="text-amber-300">[R]</code>, expending 1 travel ration) allows HP and MP to regenerate steadily over time. Monsters give campfire embers a wide berth.</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5" style="break-inside:avoid;margin-bottom:12px">
+                    <h4 class="font-cinzel text-yellow-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">7. EQUIPMENT, SHIELDS &amp; LOOT</h4>
+                    <p><strong class="text-blue-400">16-Slot Backpack:</strong> Press <code class="text-amber-300">[I]</code> to inspect your paperdoll and arrange inventory. Equip weapons, armor, headgear, shields, swamp boots and pets by clicking or dragging. Right-click potions to drink.</p>
+                    <p><strong class="text-cyan-300">Shields &amp; Two-Handed Weapons:</strong> Shields grant direct AC bonuses and can be purchased from smiths, found in chests, or dropped by monsters. <b class="text-white">Two-handed weapons</b> (Hunting Bow, Silver Halberd, Musket Rifle, Blunderbuss) require both hands and cannot be held alongside a shield.</p>
+                    <p><strong class="text-yellow-300">Enchanted &amp; Rare Gear:</strong> Defeating monsters or finding treasure chests can yield magical items (+1 to +5 with powerful prefixes and suffixes). Blue items possess one magical affix; gold items are rare treasures carrying both prefix and suffix.</p>
+                </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="folk">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2">
+                    <h4 class="font-cinzel text-emerald-400 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">THE FIVE ANCESTRIES OF ASTRA</h4>
+                    <p class="text-[11px] text-slate-400">Your ancestry shapes your foundational ability scores and grants unique inherent traits:</p>
+                    <ul class="space-y-1.5 text-[11px]">
+                        <li><b class="text-amber-300">Human:</b> <code class="text-amber-300">All Attributes +0</code><br>Versatile and ambitious champions adaptable to every calling and martial discipline.</li>
+                        <li><b class="text-emerald-300">Elf:</b> <code class="text-amber-300">STR −1, DEX +2, INT +1</code><br>Keen-eyed woodland folk with unmatched grace, excelling as Rangers, Rogues, and Arcane Wizards.</li>
+                        <li><b class="text-orange-300">Dwarf:</b> <code class="text-amber-300">STR +2, DEX −1, INT −1, WIS +1, +1 HP per level</code><br>Stout, unyielding mountain dwellers renowned for legendary resilience as Fighters, Paladins, and Clerics.</li>
+                        <li><b class="text-teal-300">Halfling:</b> <code class="text-amber-300">STR −2, DEX +2, WIS +1</code><br>Nimble, fleet-footed scouts gifted with natural luck, quick reflexes, and keen devotion as Rogues, Bards, and Clerics.</li>
+                        <li><b class="text-purple-300">Automaton:</b> <code class="text-amber-300">STR +1, DEX −1, +1 HP per level, +1 AC</code><br>Ancient sentient beings of bronze, rune-stone, and clockwork. Their integrated chassis grants permanent <b class="text-white">+1 AC</b>, and their inorganic bodies are completely <b class="text-white">immune to poison</b> (marsh water, venom, and toxic vapors).</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2">
+                    <h4 class="font-cinzel text-purple-400 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">CLASS OVERVIEW &amp; ROLES</h4>
+                    <p class="text-[11px] text-slate-400">Eight distinct heroic paths await in Stargazer's realm:</p>
+                    <div class="space-y-1.5 text-[11px]">
+                        <div><b class="text-amber-300">⚔ Fighter:</b> <span class="text-slate-400">d10 HP • No Mana • All Weapons &amp; Heavy Armor • All Shields</span><br>Unmatched frontline powerhouse and defensive anchor.</div>
+                        <div><b class="text-cyan-300">🛡 Paladin:</b> <span class="text-slate-400">d10 HP • Divine Mana • Martial Weapons &amp; Heavy Armor • Shields</span><br>Holy crusader wielding restorative blessings and holy smites.</div>
+                        <div><b class="text-emerald-300">🏹 Ranger:</b> <span class="text-slate-400">d10 HP • Hybrid Mana • Bows &amp; Finesse Blades • Light Shields</span><br>Deadly long-range sniper and agile wilderness skirmisher.</div>
+                        <div><b class="text-slate-200">🗡 Rogue:</b> <span class="text-slate-400">d8 HP • No Mana • Finesse Weapons &amp; Bows • Bucklers</span><br>Fast, lethal infiltrator with supreme evasion and fleeing odds.</div>
+                        <div><b class="text-teal-300">✚ Cleric:</b> <span class="text-slate-400">d8 HP • Divine Mana • Maces &amp; Medium Armor • Shields</span><br>Supreme party healer, poison curer, and protector against darkness.</div>
+                        <div><b class="text-purple-300">✦ Wizard:</b> <span class="text-slate-400">d6 HP • Arcane Mana • Daggers &amp; Cloth • No Shields</span><br>Master of elemental storms, mind control, and cataclysmic Armageddon.</div>
+                        <div><b class="text-pink-300">♪ Bard:</b> <span class="text-slate-400">d8 HP • Bardic Mana • Swords, Bows &amp; Light Armor • Bucklers</span><br>Charismatic spellcaster commanding Five battlefield-wide party Songs.</div>
+                        <div><b class="text-orange-300">⚙ Tinker:</b> <span class="text-slate-400">d8 HP • Gadget Mana • Exclusive Firearms &amp; Grenades • Medium Armor</span><br>Clockwork inventor commanding firearms, deployable turrets &amp; robots.</div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="fighter">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-amber-400 font-bold text-sm tracking-wider">⚔ THE FIGHTER // CHAMPION OF STEEL</h4>
+                        <span class="text-xs text-amber-300 font-mono">Hit Die: d10 • Mana: None • Difficulty: Beginner</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> The Fighter is the supreme master of physical combat and the sturdiest frontline warrior in the realm. With a massive d10 hit die and access to the heaviest plate armor and largest bulwarks, Fighters excel at absorbing furious enemy punishment while cutting down foes.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-amber-300">Strength (STR):</b> Maximizes to-hit accuracy and raw damage with melee weapons.</li>
+                                <li><b class="text-cyan-300">Dexterity (DEX):</b> Boosts ranged bow attacks and supplementary defense.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Proficient with all weapons: Dagger, Heavy Mace, Hunting Bow, Broadsword, Silver Halberd, Astral Blade.</li>
+                                <li><b class="text-white">Armors:</b> Cloth, Leather, Studded Cuirass, Chainmail, Steel Plate, Astral Aegis.</li>
+                                <li><b class="text-white">Shields:</b> Buckler (+1 AC), Round Shield (+2 AC), Heater Shield (+2 AC), Tower Shield (+3 AC), Astral Barrier (+4 AC).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-amber-300 block">Tactical Guidance:</strong>
+                        <p>Pairing a Broadsword or enchanted Astral Blade with a Tower Shield or Astral Barrier gives the highest Armor Class achievable in the game, rendering standard monster attacks nearly harmless. When facing clustered monsters or striking over water, equip the Silver Halberd for devastating 2-tile reach attacks (remembering that two-handed weapons require stowing your shield).</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="paladin">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-cyan-300 font-bold text-sm tracking-wider">🛡 THE PALADIN // HOLY DEFENDER</h4>
+                        <span class="text-xs text-cyan-300 font-mono">Hit Die: d10 • Mana: Divine • Difficulty: Moderate</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Paladins are noble champions who temper martial steel with sacred miracles. Boasting the formidable d10 hit die and heavy plate armor proficiencies of a warrior, they also command divine spells to heal wounds, protect companions, and banish undead horrors.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-amber-300">Strength (STR):</b> Powers weapon attacks and heavy martial strikes.</li>
+                                <li><b class="text-cyan-300">Wisdom (WIS):</b> Determines divine spell potency and maximum mana pool.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Broadswords, Heavy Maces, Astral Blades, Silver Halberds.</li>
+                                <li><b class="text-white">Armors:</b> All armor tiers up to Steel Plate and Astral Aegis.</li>
+                                <li><b class="text-white">Shields:</b> Buckler, Round Shield, Heater Shield, Tower Shield, Astral Barrier.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-cyan-300 block">Sacred Prayers &amp; Tactics:</strong>
+                        <p>Paladins learn divine prayers 2 levels after Clerics, starting with holy light and healing. While their mana pool is more modest than a Cleric's, the ability to self-heal while encased in plate mail with a heavy Heater or Tower Shield makes them premier solo survivors and indispensable anchors in cooperative group fights.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="ranger">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-emerald-400 font-bold text-sm tracking-wider">🏹 THE RANGER // WILDERNESS SNIPER</h4>
+                        <span class="text-xs text-emerald-300 font-mono">Hit Die: d10 • Mana: Hybrid • Difficulty: Moderate</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Rangers are master trackers and archers of Astra's vast untamed wilds. They blend heavy martial vigor (d10 hit die) with deadly ranged marksmanship, nature lore, and hybrid spellcasting drawn from both arcane and divine traditions.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-emerald-300">Dexterity (DEX):</b> Maximizes archery accuracy, bow damage, and evasive defense.</li>
+                                <li><b class="text-cyan-300">Wisdom &amp; Intelligence:</b> Expands hybrid mana capacity and spell efficacy.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Hunting Bow (4-tile range), Daggers, Broadswords, Astral Blades.</li>
+                                <li><b class="text-white">Armors:</b> Cloth, Leather Armor, Studded Cuirass, Chainmail Hauberk.</li>
+                                <li><b class="text-white">Shields:</b> Buckler (+1 AC) and Round Shield (+2 AC) for close combat.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-emerald-300 block">Archery &amp; Hybrid Sorcery:</strong>
+                        <p>With high Dexterity, a Hunting Bow keeps you safely out of enemy melee reach while picking off threatening spellcasters. If enemies break through, switch to an Astral Blade and Round Shield to stand your ground, supported by utility spells like Heal, Magic Arrow, and Light.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="rogue">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-slate-200 font-bold text-sm tracking-wider">🗡 THE ROGUE // SHADOW STRIKER</h4>
+                        <span class="text-xs text-slate-400 font-mono">Hit Die: d8 • Mana: None • Difficulty: Moderate</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Rogues live by stealth, lightning speed, and surgical precision. Unencumbered by cumbersome plate or spellbooks, they convert pure Dexterity into untouchable evasion, devastating critical strikes, and the highest flee chance in the game.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-amber-300">Dexterity (DEX):</b> Core stat providing massive Armor Class bonuses in light armor, maximum to-hit and damage with finesse daggers and bows, and effortless escapes.</li>
+                                <li><b class="text-cyan-300">Intelligence (INT):</b> Enhances secondary skills and tactical perception.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Daggers, Heavy Maces, Hunting Bows.</li>
+                                <li><b class="text-white">Armors:</b> Cloth Tunic, Leather Armor, Studded Cuirass.</li>
+                                <li><b class="text-white">Shields:</b> Agile Bucklers (+1 AC).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-amber-300 block">Precision &amp; Skirmishing:</strong>
+                        <p>Because Studded Cuirass allows a generous DEX cap, high-level Rogues often match or surpass heavily armored warriors in dodge defense. Seek out weapons with the <i>Keen</i> affix (critical strikes on 19-20) or <i>of the Leech</i> to sustain your health bar indefinitely through rapid strikes.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="cleric">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-teal-300 font-bold text-sm tracking-wider">✚ THE CLERIC // ANOINTED HEALER</h4>
+                        <span class="text-xs text-teal-300 font-mono">Hit Die: d8 • Mana: Divine (Deep) • Difficulty: Easy</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Clerics are the sacred shield against darkness, decay, and death. Possessing a deep divine mana pool and solid martial training up to chainmail and shields, they keep adventuring parties alive through catastrophic dungeons and boss encounters.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-teal-300">Wisdom (WIS):</b> Core divine stat powering healing dice, spell DC, and maximum mana.</li>
+                                <li><b class="text-amber-300">Strength (STR):</b> Allows effective bludgeoning strikes with maces in melee.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Heavy Maces and simple bludgeons.</li>
+                                <li><b class="text-white">Armors:</b> Cloth, Leather, Studded Cuirass, Chainmail Hauberk.</li>
+                                <li><b class="text-white">Shields:</b> Buckler (+1 AC), Round Shield (+2 AC), Heater Shield (+2 AC).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-teal-300 block">Divine Miracle Suite:</strong>
+                        <p>Clerics learn essential life-saving miracles: <b class="text-white">Cure</b> instantly clears deadly marsh and monster poison; <b class="text-white">Heal</b> and <b class="text-white">Greater Heal</b> restore massive HP; <b class="text-white">Protection</b> fortifies party AC; and <b class="text-white">Resurrect</b> brings fallen companions back into the battle.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="wizard">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-purple-400 font-bold text-sm tracking-wider">✦ THE WIZARD // ARCHMAGE OF DESTRUCTION</h4>
+                        <span class="text-xs text-purple-300 font-mono">Hit Die: d6 • Mana: Arcane (Vast) • Difficulty: Advanced</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Wizards wield the raw, unbridled forces of the cosmos. Though physically frail with a d6 hit die and limited to cloth tunics, they command the largest mana pool in Astra and can obliterate entire armies with devastating elemental and space-bending sorceries.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-purple-300">Intelligence (INT):</b> Direct catalyst for arcane spell damage, spell save DC, and immense mana pools.</li>
+                                <li><b class="text-cyan-300">Dexterity (DEX):</b> Crucial secondary stat to maximize cloth evasion and turn initiative.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Daggers (finesse).</li>
+                                <li><b class="text-white">Armors:</b> Cloth Tunics only. Metal armors disrupt spellcasting.</li>
+                                <li><b class="text-white">Shields:</b> None. Wizards require both hands free to focus astral currents.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-purple-300 block">The Arcane Grimoire:</strong>
+                        <p>Wizards master area-of-effect spells: <b class="text-white">Fireball</b> (scorching AOE blast), <b class="text-white">Chain Bolt</b>, <b class="text-white">Lightning</b>, <b class="text-white">Sleep</b>, and <b class="text-white">Time Stop</b> (freezes all enemies for two full rounds). At Level 20, they unlock the pinnacle of astral magic: <b class="text-yellow-300">Armageddon</b> (120 MP), instantly wiping out all foes on the battlefield once per rest.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="bard">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-pink-300 font-bold text-sm tracking-wider">♪ THE BARD // MAESTRO OF INSPIRATION</h4>
+                        <span class="text-xs text-pink-300 font-mono">Hit Die: d8 • Mana: Bardic • Difficulty: Moderate</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Bards are charismatic loremasters, enchanters, and support virtuosos. In addition to a broad arsenal of swords, bows, and illusion spells, Bards possess the unique ability to weave <b class="text-white">The Five Sacred Songs</b> that empower all allies across the entire battlefield.</p>
+                            <p><strong class="text-white">Primary Attributes:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-pink-300">Dexterity &amp; Intelligence:</b> Enhance finesse strikes, bow accuracy, and song mana.</li>
+                                <li><b class="text-teal-300">Wisdom (WIS):</b> Bolsters song potency and lingering melodies.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment Proficiencies:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Weapons:</b> Daggers, Heavy Maces, Hunting Bows, Broadswords, Astral Blades.</li>
+                                <li><b class="text-white">Armors:</b> Cloth, Leather Armor, Studded Cuirass.</li>
+                                <li><b class="text-white">Shields:</b> Bucklers (+1 AC).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-pink-300 block">The Five Songs (Touches All Allies on the Field):</strong>
+                        <ul class="list-disc list-inside space-y-0.5 text-slate-300">
+                            <li><b class="text-emerald-300">Ballad of Mending (Lv 1):</b> Heals all allies immediately and every round (also heals nearby players outside combat).</li>
+                            <li><b class="text-amber-300">March of Valor (Lv 3):</b> Grants +1 to-hit and +2 damage party-wide (scales at Lv 9 &amp; 15).</li>
+                            <li><b class="text-sky-300">Aria of the Aegis (Lv 6):</b> Grants +2 AC and direct damage reduction for all companions.</li>
+                            <li><b class="text-violet-300">Hymn of Vigor (Lv 10):</b> Instantly purges poison and restores mana each round to all allied casters.</li>
+                            <li><b class="text-yellow-300">Stargazer's Anthem (Lv 15):</b> The ultimate song: +2 to-hit, +3 damage, +3 AC, damage warding, and continuous regeneration.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="tinker">
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-3 text-slate-300">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h4 class="font-cinzel text-orange-300 font-bold text-sm tracking-wider">⚙ THE TINKER // CLOCKWORK GUNSMITH</h4>
+                        <span class="text-xs text-orange-300 font-mono">Hit Die: d8 • Mana: Gadgetry • Difficulty: Moderate</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Role &amp; Strengths:</strong> Tinkers are ingenious engineers and alchemical artillerists. They are the <b class="text-white">exclusive wielders of firearms</b> in Astra, raining bullets, grenades, and autonomous clockwork constructs upon any monster reckless enough to face them.</p>
+                            <p><strong class="text-white">Exclusive Firearms Arsenal:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-amber-300">Musket Pistol:</b> 1d8 damage, range 3 tiles, one-handed (starts with one).</li>
+                                <li><b class="text-orange-300">Blunderbuss:</b> 2d6 damage, range 2 tiles, two-handed cone spread hitting adjacent foes for half damage.</li>
+                                <li><b class="text-cyan-300">Musket Rifle:</b> 2d8 damage, range 6 tiles, two-handed sniper rifle with unmatched range.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p><strong class="text-white">Equipment &amp; Gunsmith Talents:</strong></p>
+                            <ul class="list-disc list-inside space-y-0.5 text-slate-400">
+                                <li><b class="text-white">Armors:</b> Cloth, Leather, Studded Cuirass, Chainmail Hauberk.</li>
+                                <li><b class="text-white">Gunsmith Bonuses:</b> Gains +1 to hit with firearms at Lv 5, 10, 15, and 20; and +1 damage at Lv 5, 9, 13, and 17.</li>
+                                <li><b class="text-white">Shields:</b> None (Tinkers keep their off-hand free for firearm loading, powder kegs, and grenade deployment).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-orange-300 block">Gadgets, Grenades &amp; Autonomous Constructs:</strong>
+                        <p><b class="text-white">Thrown Munitions:</b> Frag Grenade &amp; Flash-Bang (Lv 1), Smoke Bomb (Lv 4), Glue Bomb (Lv 6), Acid Flask (Lv 7), Incendiary (Lv 9), Cluster Bomb (Lv 10), Tesla Grenade (Lv 13), Gas Grenade (Lv 14), Mortar Barrage (Lv 16), Thermite (Lv 18), Doomsday Device (Lv 20).<br>
+                        <b class="text-white">Clockwork Allies:</b> Deploy mechanical units that fight independently: <b class="text-amber-300">Clockwork Turret</b> (Lv 2, stationary turret), <b class="text-amber-300">Robot Dog</b> (Lv 5, swift multi-biter), <b class="text-amber-300">Robot Spider</b> (Lv 8, venom injector), and the colossal <b class="text-amber-300">Steam Golem</b> (Lv 12, frontline heavy bruiser).</p>
+                    </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="online">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2 md:col-span-2">
+                    <h4 class="font-cinzel text-emerald-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1">COOPERATIVE MULTIPLAYER &amp; THE PERSISTENT REALM</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+                        <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 space-y-1">
+                            <strong class="text-white block font-bold">1. A Unified Shared World</strong>
+                            <p>Every adventurer explores the exact same continent. The server synchronizes the world clock, day/night transitions, weather fronts (rain, fog, thunderstorms), town markets, and Moongates in real time. Nearby players appear as named avatars; resting adventurers display a sleeping indicator.</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 space-y-1">
+                            <strong class="text-white block font-bold">2. Chat Channels &amp; Social</strong>
+                            <p>Press <code class="text-amber-300">[T]</code> to open the communications feed. Switch between channels seamlessly:
+                            <br>• <b class="text-amber-300">/w Name message:</b> Private direct whisper
+                            <br>• <b class="text-emerald-300">/g message:</b> Adventuring group channel
+                            <br>• <b class="text-cyan-300">/l message:</b> Local area channel
+                            <br>• <b class="text-slate-300">World:</b> Global realm announcements</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 space-y-1">
+                            <strong class="text-white block font-bold">3. Groups &amp; Shared Encounters</strong>
+                            <p>Form parties of up to 4 players via the PLAYERS tab or <code class="text-amber-300">/invite Name</code>. If a party member is ambushed within 10 tiles, companions are automatically drawn into the tactical combat encounter to fight side by side.</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 text-[11px] space-y-1">
+                        <strong class="text-amber-300 block">Tactical Combat Reinforcements:</strong>
+                        <p>Battles underway in the overworld are visibly marked by clashing blade icons. Any adventurer who steps onto that tile is prompted to join the fray. Combat turns cycle fairly, with a turn timer ensuring smooth progression. XP and gold are awarded in full to all participants, and dropped loot chests can be opened by each hero individually.</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="man-tab hidden" data-mtab="bestiary">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <h4 class="font-cinzel text-rose-300 font-bold text-xs tracking-wider border-b border-slate-800 pb-1 mb-2">THE ADVENTURER'S BESTIARY // REALM MONSTERS</h4>
+                    <p class="text-[11px] text-slate-400 mb-2">Complete compendium of Astra's monsters, ranked dynamically from least to greatest threat level:</p>
+                    <div id="bestiary-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jukebox: a floating player for any tune of the game; it keeps playing until it is closed -->
+    <div id="jukebox-panel" class="hidden" style="position:fixed;right:18px;bottom:18px;width:360px;max-width:calc(100vw - 24px);z-index:60;background:#0f172a;border:1px solid #b4832c;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:flex;flex-direction:column">
+        <div id="jb-head" class="flex items-center gap-2 px-3 py-2 border-b border-slate-800" style="cursor:move;user-select:none">
+            <span style="color:#f0abfc">&#9835;</span>
+            <div class="min-w-0 flex-1"><div class="font-cinzel text-sm font-bold text-fuchsia-300 tracking-wider">JUKEBOX</div><div id="jb-now" class="text-[10px] text-slate-400 truncate">Choose a tune</div></div>
+            <button id="jb-mini-play" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-xs text-emerald-300 hidden" title="Play / stop">&#9654;</button>
+            <button id="jb-min" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold" title="Minimize">&#8211;</button>
+            <button id="btn-close-jukebox" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-rose-900 text-slate-300 text-xs font-bold" title="Close - the regular music returns">&#10005;</button>
+        </div>
+        <div id="jb-body" class="p-3 flex flex-col gap-2.5">
+            <div id="jb-off" class="hidden px-3 py-2 rounded bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs">Music is switched off - <button id="jb-on" class="underline font-bold">turn it on</button> to listen.</div>
+            <div class="flex items-center gap-2">
+                <button id="jb-prev" class="hud-btn" style="min-width:38px;justify-content:center">&#9198;</button>
+                <button id="jb-play" class="hud-btn" style="min-width:80px;justify-content:center;color:#86efac">&#9654; PLAY</button>
+                <button id="jb-next" class="hud-btn" style="min-width:38px;justify-content:center">&#9197;</button>
+                <div class="flex-1 h-2 rounded bg-slate-800 overflow-hidden"><div id="jb-bar" class="h-full bg-fuchsia-400" style="width:0%"></div></div>
+                <span id="jb-time" class="text-[10px] text-slate-400 w-16 text-right">0:00 / 0:00</span>
+            </div>
+            <label class="vol-row"><span>Volume</span><input id="jb-vol" type="range" min="0" max="100" step="1" value="100"><b id="jb-vol-val">100%</b></label>
+            <div id="jb-list" class="flex flex-col gap-1 overflow-y-auto pr-1" style="max-height:34vh"></div>
+            <p class="text-[10px] text-slate-500">The chosen tune repeats until thou pickest another or pressest stop (then the music of the place returns). Closing the jukebox ends it.</p>
+        </div>
+    </div>
+
+    <!-- Settings / Account Modal ([ESC] in main view) -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[65] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-lg w-full p-5 flex flex-col gap-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <div>
+                    <h3 class="font-cinzel text-lg font-bold text-amber-400 tracking-wider">ACCOUNT &amp; SETTINGS</h3>
+                    <p id="settings-account" class="text-[11px] text-slate-400">Logged in</p>
+                </div>
+                <button id="btn-close-settings" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold">✕ RESUME [ESC]</button>
+            </div>
+
+            <div id="settings-status-msg" class="hidden px-3 py-2 rounded bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 text-xs font-bold"></div>
+
+            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 flex flex-col gap-2.5">
+                <span class="text-xs font-bold text-fuchsia-300 tracking-wider">SOUND &amp; MUSIC</span>
+                <div class="flex gap-2">
+                    <button id="btn-music" class="hud-btn" style="color:#f0abfc" data-tip-cmd="music"><span id="music-ico" data-icon="music"></span><span id="music-indicator">MUSIC: ON</span></button>
+                    <button id="btn-sound" class="hud-btn" data-tip-cmd="sound"><span id="sound-ico" data-icon="volume"></span><span id="sound-indicator">SOUND: ON</span></button>
+                </div>
+                <label class="vol-row"><span>Music</span><input id="vol-music" type="range" min="0" max="100" step="1" value="100"><b id="vol-music-val">100%</b></label>
+                <label class="vol-row"><span>Ambient sounds</span><input id="vol-amb" type="range" min="0" max="100" step="1" value="100"><b id="vol-amb-val">100%</b></label>
+                <label class="vol-row"><span>Combat &amp; effects</span><input id="vol-sfx" type="range" min="0" max="100" step="1" value="100"><b id="vol-sfx-val">100%</b></label>
+            </div>
+
+            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 flex flex-col gap-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-cyan-400 tracking-wider">SERVER SAVE</span>
+                    <span id="browser-save-meta" class="text-[10px] text-slate-400">...</span>
+                </div>
+                <p class="text-[11px] text-slate-400">Thy character is saved to the server automatically every half minute and after every battle, rest and purchase.</p>
+                <button id="btn-save-server" class="btn-retro py-2 px-3 rounded bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-500/60 text-emerald-200 font-bold text-xs">💾 SAVE NOW</button>
+            </div>
+
+            <div class="border-t border-slate-800 pt-3 flex items-center justify-between">
+                <button id="btn-open-manual-from-settings" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 text-cyan-300 text-xs font-bold">
+                    [?] OPEN ADVENTURER'S MANUAL
+                </button>
+                <button id="btn-switch-hero" class="btn-retro px-3.5 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-amber-500/50 text-amber-200 text-xs font-bold">
+                    &#9876; SWITCH HERO
+                </button>
+                <button id="btn-logout" class="btn-retro px-3.5 py-2 rounded bg-rose-950/90 hover:bg-rose-900 border border-rose-500/60 text-rose-200 text-xs font-bold">
+                    ⎋ SAVE &amp; LOG OUT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inn rest overlay: the hero sleeps in a bed while HP and MP mend; wake up at any time -->
+    <div id="sleep-overlay" style="position:fixed;inset:0;z-index:90;background:rgba(2,6,23,.88);opacity:0;pointer-events:none;transition:opacity 500ms ease;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:16px">
+        <div id="rest-title" class="font-cinzel" style="font-size:14px;letter-spacing:.25em;color:#fbbf24">RESTING AT THE INN</div>
+        <canvas id="sleep-canvas" width="440" height="230" style="width:min(440px,92vw);border-radius:14px;border:1px solid rgba(245,158,11,.5)"></canvas>
+        <div id="rest-stats" style="font-size:13px;font-weight:700;color:#fef3c7;font-family:'JetBrains Mono',monospace;letter-spacing:.05em"></div>
+        <div style="width:min(360px,80vw);height:9px;border-radius:5px;background:rgba(2,6,23,.8);border:1px solid rgba(52,211,153,.5);overflow:hidden"><i id="rest-hp-bar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#059669,#34d399);transition:width .9s linear"></i></div>
+        <div style="width:min(360px,80vw);height:7px;border-radius:4px;background:rgba(2,6,23,.8);border:1px solid rgba(56,189,248,.5);overflow:hidden"><i id="rest-mp-bar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#0369a1,#38bdf8);transition:width .9s linear"></i></div>
+        <div id="sleep-sub" style="font-size:12px;color:#94a3b8;font-family:'JetBrains Mono',monospace"></div>
+        <button id="rest-wake" class="btn-retro" style="margin-top:4px;padding:8px 22px;border-radius:9px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:12px;letter-spacing:.1em;border:0;cursor:pointer">WAKE UP [ESC]</button>
+    </div>
+
+    <!-- Loot popup: everything the party picks up is shown here and must be confirmed -->
+    <div id="loot-modal" class="hidden" style="position:fixed;inset:0;z-index:80;background:rgba(2,6,23,0.78);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px">
+        <div id="loot-box" class="gold-border" style="background:linear-gradient(180deg,#0f172a,#020617);border-radius:14px;max-width:420px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+                <span id="loot-icon" class="it-ico" style="--c:251,191,36;width:40px;height:40px;border-radius:11px"></span>
+                <h3 id="loot-title" class="font-cinzel" style="font-size:17px;font-weight:800;color:#fbbf24;letter-spacing:.08em;margin:0">TREASURE!</h3>
+            </div>
+            <p id="loot-sub" style="font-size:11px;color:#94a3b8;margin:0"></p>
+            <div id="loot-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto"></div>
+            <div><button id="btn-loot-ok" class="ok-btn"><span data-icon="check"></span>OK</button></div>
+            <p style="font-size:10px;color:#475569;margin:0">[Enter] / [Space] to confirm</p>
+        </div>
+    </div>
+    <div id="ui-tip"></div>
+
+    <!-- A bag of loot lying in the world -->
+    <div id="bag-modal" class="hidden fixed inset-0 z-[66] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-md w-full p-5 flex flex-col gap-3 shadow-2xl">
+            <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">A BAG OF SPOILS</h3>
+            <p class="text-[11px] text-slate-400">Left behind because a bag was full. Take what thou canst carry - anyone may.</p>
+            <div id="bag-list" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
+            <div class="flex gap-2.5">
+                <button id="bag-close" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs">LEAVE IT</button>
+                <button id="bag-take-all" class="btn-retro flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">TAKE ALL</button>
+            </div>
+        </div>
+    </div>
+    <div id="ui-tip2"></div>
+
+    <!-- Ctrl+click on gear: how it would look on thy champion -->
+    <div id="gear-preview-modal" class="hidden fixed inset-0 z-[125] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-md w-full p-5 flex flex-col items-center gap-3 shadow-2xl text-center">
+            <h3 class="font-cinzel text-sm font-bold text-amber-400 tracking-wider">TRY IT ON</h3>
+            <div id="gp-title" class="font-cinzel text-base font-bold text-amber-300"></div>
+            <div id="gp-note" class="text-[11px]"></div>
+            <div class="flex gap-3">
+                <div><canvas id="gp-now" width="180" height="210" class="rounded-lg border border-slate-700"></canvas><div class="text-[11px] text-slate-400 mt-1">NOW</div></div>
+                <div><canvas id="gp-after" width="180" height="210" class="rounded-lg border border-amber-500/50"></canvas><div class="text-[11px] text-amber-300 mt-1">WITH THIS</div></div>
+            </div>
+            <button id="gp-close" class="btn-retro px-6 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider">CLOSE [ESC]</button>
+        </div>
+    </div>
+
+    <!-- In-game confirmation popup (character deletion ...) -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-sm w-full p-5 flex flex-col items-center gap-3 shadow-2xl text-center" style="box-shadow:0 0 40px rgba(239,68,68,.25)">
+            <h3 id="confirm-title" class="font-cinzel text-base font-bold text-rose-300 tracking-wider"></h3>
+            <canvas id="confirm-canvas" width="200" height="200" class="rounded-xl bg-slate-950 border border-amber-500/40"></canvas>
+            <div id="confirm-lines" class="flex flex-col gap-1"></div>
+            <div class="flex w-full gap-2.5 pt-1">
+                <button id="confirm-cancel" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs"></button>
+                <button id="confirm-ok" class="btn-retro flex-1"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance warning: shown to everybody online while the countdown runs -->
+    <div id="maint-warn" class="hidden" style="position:fixed;inset:0;z-index:140;pointer-events:none;align-items:center;justify-content:center">
+        <div style="text-align:center;padding:18px 34px;border-radius:16px;background:rgba(40,0,0,.72);border:2px solid #ef4444;box-shadow:0 0 40px rgba(239,68,68,.45)">
+            <div class="font-cinzel" style="font-size:clamp(14px,2.4vw,22px);font-weight:800;letter-spacing:.08em;color:#fecaca">Servers are going into maintenance mode</div>
+            <div id="maint-warn-time" class="font-cinzel" style="font-size:clamp(54px,12vw,120px);font-weight:900;line-height:1.05;color:#ef4444;text-shadow:0 0 24px rgba(239,68,68,.8)">30</div>
+            <div style="font-size:12px;color:#fca5a5;letter-spacing:.1em">Thy champion is saved automatically. Thou wilt be returned to the start menu.</div>
+        </div>
+    </div>
+
+    <!-- Loot Chest / Mimic Encounter Modal -->
+    <div id="chest-modal" class="hidden fixed inset-0 z-[65] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-md w-full p-5 flex flex-col items-center gap-4 shadow-2xl text-center">
+            <canvas id="chest-preview-canvas" width="128" height="128" class="w-32 h-32 rounded-xl bg-slate-950 border border-amber-500/50"></canvas>
+            <div>
+                <h3 class="font-cinzel text-lg font-bold text-amber-400 tracking-wider">SPOILS OF BATTLE // IRON-BOUND CHEST</h3>
+                <p id="chest-modal-desc" class="text-xs text-slate-300 mt-1">The vanquished foe dropped a heavy iron-bound chest! Wilt thou pry open the lock or leave it behind?</p>
+            </div>
+            <div class="flex w-full gap-2.5">
+                <button id="btn-open-chest" class="btn-retro flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider">
+                    [1 / E] PRY OPEN CHEST
+                </button>
+                <button id="btn-leave-chest" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs">
+                    [2 / ESC] LEAVE IT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Party Creation / Customization Modal -->
+    <div id="party-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-4xl w-full p-5 flex flex-col gap-3.5 shadow-2xl max-h-[94vh] overflow-y-auto">
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2.5">
+                <div>
+                    <h3 id="creation-title" class="font-cinzel text-lg font-bold text-amber-400 tracking-wider select-none">CREATE THY CHAMPION<span id="creation-debug-badge" class="hidden ml-2 align-middle text-[9px] font-mono font-normal text-fuchsia-300/80 border border-fuchsia-400/40 rounded px-1">&#9670; DBG</span></h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-creation-back" class="hidden px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-500/60 text-xs text-slate-300 font-bold">
+                        &larr; BACK TO MY HEROES
+                    </button>
+                    <button id="btn-randomize-party" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 text-xs text-cyan-300 font-bold">
+                        🎲 RANDOMIZE [R]
+                    </button>
+                    <button id="btn-creation-help" class="px-2.5 py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-xs text-amber-300 font-bold" title="Open Adventurer's Compendium Manual">
+                        [?] MANUAL
+                    </button>
+                </div>
+            </div>
+
+            <div id="party-draft-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            <div class="flex justify-between items-center gap-2 pt-2 border-t border-slate-800">
+                <span class="text-[10px] text-slate-500 self-center">Thy champion is saved to thy account when thou begin.</span>
+                <button id="btn-start-adventure" class="btn-retro px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider">
+                    BEGIN THE LEGACY [ENTER] &gt;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Death: the valkyries carry the champion away -->
+    <div id="death-overlay" class="hidden fixed inset-0 z-[130] select-none">
+        <canvas id="death-canvas" class="absolute inset-0 w-full h-full"></canvas>
+        <div id="death-text" class="absolute inset-x-0 top-0 pt-[5vh] flex flex-col items-center text-center px-4 pointer-events-none" style="opacity:0">
+            <div class="death-kicker font-cinzel">&#10022; THE STARS HAVE CALLED THEE HOME &#10022;</div>
+            <h2 class="death-title font-cinzel">THY CHAMPION HAS FALLEN</h2>
+            <div id="death-name" class="death-name font-cinzel"></div>
+            <p class="death-sub">Two Valkyries bear thy spirit up through the clouds, into the halls of the heavens.</p>
+        </div>
+        <div class="absolute inset-x-0 bottom-[5vh] flex flex-col items-center gap-2">
+            <button id="death-ok" class="invisible btn-retro px-10 py-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold tracking-widest text-base">OK</button>
+            <div class="death-foot">Thou shalt awaken near Castle Stargazer, restored to half strength.</div>
+        </div>
+    </div>
+
+    <!-- Place name shown briefly when entering a town -->
+    <div id="area-banner" class="hidden fixed inset-0 z-[55] pointer-events-none flex flex-col items-center justify-center">
+        <div id="area-banner-kind" class="font-cinzel ab-kind"></div>
+        <div id="area-banner-name" class="font-cinzel ab-name"></div>
+        <svg class="ab-orn" viewBox="0 0 300 20" aria-hidden="true"><path d="M4 10 H128 M172 10 H296" stroke="#fbbf24" stroke-width="1.2" fill="none" opacity=".8"/><path d="M150 1 L155 8 L163 10 L155 12 L150 19 L145 12 L137 10 L145 8 Z" fill="#fbbf24"/></svg>
+    </div>
+
+    <!-- Barber -->
+    <div id="tailor-modal" class="hidden fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-2xl w-full p-5 flex flex-col gap-3 shadow-2xl max-h-[94vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">THE TAILOR</h3>
+                <span id="tailor-gold" class="text-[11px] text-yellow-300 font-bold"></span>
+            </div>
+            <p class="text-[11px] text-slate-400">Every weapon, hat and armour thou hast ever owned is kept in my pattern book. For a fee I can dress thy figure in any of them. Only the picture changes - the gear thou actually wearest still decides thy stats.</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex flex-col items-center gap-2 shrink-0">
+                    <canvas id="tl-canvas" width="200" height="250" class="rounded-xl border border-amber-500/40" style="background:radial-gradient(ellipse at 50% 30%,#1e293b,#0b1220)"></canvas>
+                    <div id="tl-price" class="text-[11px] text-slate-300"></div>
+                </div>
+                <div class="flex-1 min-w-0 flex flex-col gap-3">
+                    <div><h4 class="text-xs font-bold text-amber-400 tracking-wider mb-1.5">WEAPON LOOKS</h4><div id="tl-grid-w" class="cos-grid"></div></div>
+                    <div><h4 class="text-xs font-bold text-violet-300 tracking-wider mb-1.5">HEADGEAR LOOKS</h4><div id="tl-grid-h" class="cos-grid"></div></div>
+                    <div><h4 class="text-xs font-bold text-cyan-400 tracking-wider mb-1.5">ARMOUR LOOKS</h4><div id="tl-grid-a" class="cos-grid"></div></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="tl-apply" class="btn-retro flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider">APPLY</button>
+                <button id="tl-cancel" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pet-modal" class="hidden fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-2xl w-full p-5 flex flex-col gap-3 shadow-2xl max-h-[94vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">THE MENAGERIE</h3>
+                <span id="pet-gold" class="text-[11px] text-yellow-300 font-bold"></span>
+            </div>
+            <p class="text-[11px] text-slate-400">A pet follows thee around the world once thou puttest it in the pet slot of the character screen [I]. It is only for show - it never takes part in a fight.</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex flex-col items-center gap-2 shrink-0">
+                    <canvas id="pet-canvas" width="220" height="180" class="rounded-xl border border-amber-500/40" style="background:radial-gradient(ellipse at 50% 70%,#2f5a3a,#14261a)"></canvas>
+                    <div id="pet-title" class="font-cinzel text-sm font-bold text-amber-300"></div>
+                </div>
+                <div class="flex-1 min-w-0 flex flex-col gap-3">
+                    <div class="flex gap-2"><button id="pet-tab-d" class="inv-tab-btn active">🐕 DOGS</button><button id="pet-tab-c" class="inv-tab-btn">🐈 CATS</button><button id="pet-tab-p" class="inv-tab-btn">🦜 PARROTS</button></div>
+                    <div><h4 class="text-xs font-bold text-amber-400 tracking-wider mb-1.5">BREED</h4><div id="pet-breeds" class="flex flex-wrap gap-1.5"></div></div>
+                    <div><h4 class="text-xs font-bold text-cyan-400 tracking-wider mb-1.5">COLOUR</h4><div id="pet-colors" class="flex flex-wrap gap-1.5"></div></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="pet-buy" class="btn-retro flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider">BUY</button>
+                <button id="pet-close" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="barber-modal" class="hidden fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 gold-border rounded-xl max-w-xl w-full p-5 flex flex-col gap-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400 tracking-wider">THE BARBER'S CHAIR</h3>
+                <span id="barber-gold" class="text-[11px] text-yellow-300 font-bold"></span>
+            </div>
+            <div id="barber-body" class="flex flex-wrap sm:flex-nowrap gap-4"></div>
+            <div class="flex gap-2">
+                <button id="barber-apply" class="btn-retro flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wide">APPLY</button>
+                <button id="barber-cancel" class="btn-retro flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs tracking-wide">[ESC] CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character selection -->
+    <div id="char-modal" class="hidden fixed inset-0 z-[90] overflow-y-auto" style="background:radial-gradient(ellipse at 50% 15%,#16224d 0%,#050a1f 65%,#020617 100%)">
+        <div class="min-h-full flex flex-col items-center justify-center gap-5 px-4 py-8">
+            <div class="text-center">
+                <div class="font-cinzel text-2xl sm:text-3xl font-extrabold tracking-widest text-amber-300" style="text-shadow:0 0 18px rgba(251,191,36,.4)">CHOOSE THY CHAMPION</div>
+                <div id="char-sub" class="text-[11px] text-slate-400 mt-1"></div>
+            </div>
+            <div id="char-error" class="hidden px-3 py-2 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 text-xs font-bold"></div>
+            <div id="char-grid" class="flex flex-wrap justify-center gap-4 max-w-4xl"></div>
+            <button id="char-logout" class="btn-retro px-4 py-2 rounded bg-rose-950/90 hover:bg-rose-900 border border-rose-500/60 text-rose-200 text-xs font-bold">&#9099; LOG OUT</button>
+        </div>
+    </div>
+
+    <!-- Title screen / Login / Registration -->
+    <div id="login-modal" class="fixed inset-0 z-[100] overflow-y-auto" data-stage="splash">
+        <canvas id="login-stars" class="fixed inset-0 w-full h-full"></canvas>
+        <div class="login-vignette"></div>
+        <div class="relative min-h-full flex flex-col items-center justify-center gap-6 px-4 py-8">
+            <header class="title-block text-center">
+                <div class="title-eyebrow"><span></span>A CHRONICLE OF THE FALLEN STARS<span></span></div>
+                <h1 class="title-main font-cinzel">
+                    <span class="title-the">THE STARGAZER'S</span>
+                    <span class="title-legacy">LEGACY</span>
+                </h1>
+                <svg class="title-orn" viewBox="0 0 400 24" aria-hidden="true">
+                    <path d="M4 12 H168 M232 12 H396" stroke="url(#ornGrad)" stroke-width="1.4" fill="none"/>
+                    <path d="M200 1 L206 10 L216 12 L206 14 L200 23 L194 14 L184 12 L194 10 Z" fill="#fbbf24"/>
+                    <circle cx="176" cy="12" r="2.4" fill="#fbbf24"/><circle cx="224" cy="12" r="2.4" fill="#fbbf24"/>
+                    <defs><linearGradient id="ornGrad" x1="0" x2="1"><stop offset="0" stop-color="#f59e0b" stop-opacity="0"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+                </svg>
+                <div class="title-online font-cinzel">O N L I N E</div>
+                <p class="title-tag">Forge thy champion. Walk the shared world. Wake the sleeping stars.</p>
+            </header>
+
+            <div id="intro-start" class="intro-start font-cinzel">&#10022; Click or press any key to begin &#10022;</div>
+
+            <div id="maint-card" class="maint-card">
+                <canvas id="maint-canvas" width="620" height="340"></canvas>
+                <p class="maint-note font-cinzel">The realm will reopen soon. This page checks back by itself.</p>
+            </div>
+
+            <div id="auth-card" class="auth-card relative bg-slate-900/80 gold-border rounded-xl max-w-sm w-full p-6 flex flex-col gap-4 shadow-2xl">
+                <div class="flex gap-1">
+                    <button id="auth-tab-login" class="side-tab on flex-1">LOG IN</button>
+                    <button id="auth-tab-register" class="side-tab flex-1">NEW ACCOUNT</button>
+                </div>
+                <form id="auth-form" class="flex flex-col gap-2.5" autocomplete="on">
+                    <label class="text-[11px] text-slate-400">Account name
+                        <input id="auth-name" name="username" type="text" maxlength="16" autocomplete="username" spellcheck="false" class="mt-1 w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-amber-200 text-sm focus:outline-none focus:border-amber-400" />
+                    </label>
+                    <label class="text-[11px] text-slate-400">Password
+                        <input id="auth-pass" name="password" type="password" maxlength="100" autocomplete="current-password" class="mt-1 w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-amber-200 text-sm focus:outline-none focus:border-amber-400" />
+                    </label>
+                    <label id="auth-pass2-wrap" class="hidden text-[11px] text-slate-400">Repeat password
+                        <input id="auth-pass2" type="password" maxlength="100" autocomplete="new-password" class="mt-1 w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-amber-200 text-sm focus:outline-none focus:border-amber-400" />
+                    </label>
+                    <div id="auth-error" class="hidden px-3 py-2 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 text-xs font-bold"></div>
+                    <button id="auth-submit" type="submit" class="btn-retro py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm tracking-wider">ENTER THE REALM</button>
+                </form>
+                <p class="text-[10px] text-slate-500 text-center leading-snug">One shared world: the clock, the weather, the roads and the battles. Thy champion is kept safe on the server.</p>
+            </div>
+        </div>
+        <button id="login-music" type="button" class="login-music" title="Toggle the title music">&#9835; MUSIC</button>
+    </div>
+
+    <script src="js/worldfeatures.js"></script>
+    <script src="js/pets.js"></script>
+    <script src="js/monsterart.js"></script>
+    <script src="js/heroart.js"></script>
+    <script src="js/deathart.js"></script>
+    <script src="js/net.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/towngen.js"></script>
+    <script src="js/hotbar.js"></script>
+</body>
+</html>
