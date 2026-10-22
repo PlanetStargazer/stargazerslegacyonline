@@ -916,7 +916,7 @@
             { name: "Kobold",        hd: [2, 8, 2],  ac: 12, atk: 1, na: 1, dn: 1, dd: 4,  db: 0, xp: 11,  gold: 4,  color: "#c2410c", shape: "kobold",   range: 1 },
             { name: "Giant Bat",     hd: [1, 8, 3],  ac: 13, atk: 2, na: 1, dn: 1, dd: 4,  db: 0, xp: 12,  gold: 0,  color: "#7c3aed", shape: "bat",      range: 1 },
             { name: "Goblin",        hd: [3, 8, 3],  ac: 12, atk: 2, na: 1, dn: 1, dd: 6,  db: 1, xp: 15,  gold: 6,  color: "#84cc16", shape: "goblin",   range: 1 },
-            { name: "Giant Snake",   hd: [3, 8, 4],  ac: 12, atk: 3, na: 1, dn: 1, dd: 6,  db: 1, xp: 18,  gold: 0,  color: "#22c55e", shape: "snake",    range: 1 },
+            { name: "Giant Snake",   hd: [3, 8, 4],  ac: 12, atk: 3, na: 1, dn: 1, dd: 6,  db: 1, xp: 18,  gold: 0,  color: "#22c55e", shape: "snake",    range: 1, venom: 0.35 },
             { name: "Wolf",          hd: [4, 8, 4],  ac: 12, atk: 3, na: 1, dn: 1, dd: 8,  db: 1, xp: 20,  gold: 0,  color: "#a8a29e", shape: "wolf",     range: 1 },
             { name: "Headless",      hd: [9, 8, 14], ac: 14, atk: 4, na: 1, dn: 1, dd: 10, db: 3, xp: 40,  gold: 14, color: "#d6a77a", shape: "headless", range: 1 },
             { name: "Roper",         hd: [10, 8, 20],ac: 14, atk: 4, na: 2, dn: 1, dd: 6,  db: 2, xp: 50,  gold: 20, color: "#a3b34c", shape: "roper",    range: 2 },
@@ -2794,7 +2794,7 @@
             kobold: "A scrappy little lizard-dog of the hills with a sharpened stick. Cowardly in the open, vicious in numbers.",
             bat: "A leathery-winged bat as big as a cat. Quick to hit and hard to pin down.",
             goblin: "A sneaky green raider with a notched blade. Fights dirty and loves an ambush.",
-            snake: "A thick-bodied constrictor that waits in the grass. It strikes from a coil with surprising speed.",
+            snake: "A thick-bodied serpent that waits in the grass. Strikes from a coil with surprising speed and deadly venom.",
             wolf: "A grey hunter in a pack. Wolves are fast and bite hard, and they keep to forests and snow.",
             headless: "A headless brute with its face on its chest, swinging a club. Slow-witted and strong.",
             roper: "A stalagmite of slime with a single eye and strands that reach out of the swamp. It never moves - but it never misses.",
@@ -5331,7 +5331,7 @@
             const acc = color || '#ef4444';
             const t = vgTick();
             const rect = (x, y, w, h, f, st) => vgPoly(ctx, s, [[x, y], [x + w, y], [x + w, y + h], [x, y + h]], f, st === undefined ? O : st, lw);
-            vgGround(ctx, s, shape === 'dragon' ? 0.42 : 0.3);
+            vgGround(ctx, s, shape === 'dragon' ? 0.42 : (shape === 'wings' || shape === 'orc' || shape === 'headless' ? 0.36 : (shape === 'kobold' || shape === 'goblin' ? 0.22 : 0.3)));
             ctx.translate(0, Math.sin(t * 0.06 + s) * s * 0.01);
             if (typeof EXTRA_MONSTER_ART !== 'undefined' && EXTRA_MONSTER_ART[shape]) { EXTRA_MONSTER_ART[shape](ctx, s, t, lw, O); ctx.restore(); return; }
 
@@ -11577,6 +11577,7 @@
                     color: mTemplate.color,
                     shape: mTemplate.shape,
                     range: mTemplate.range,
+                    venom: mTemplate.venom || (mTemplate.shape === 'snake' ? 0.35 : 0),
                     sleep: 0,
                     fleeing: false,
                     uid: nextUid(),
@@ -12569,6 +12570,15 @@
                     fxSound('hit', tH);
                     spawnFloatingText(hu.x, hu.y, res.crit ? `CRIT -${dmg}` : `-${dmg}`, "#ef4444", tH);
                     addLog(`${en.name} ${res.crit ? 'lands a CRITICAL HIT on' : 'attacks'} ${hero.name} for ${dmg} DMG!${dr ? ' (warded)' : ''}${hero.hp <= 0 ? ' ' + hero.name + ' falls!' : ''}`, "text-rose-400");
+                    if ((en.shape === 'snake' || en.venom) && hero.hp > 0 && !hero.poisoned && !((RACES[hero.race] || {}).poisonImmune)) {
+                        const vChance = en.venom || 0.35;
+                        if (Math.random() < vChance) {
+                            hero.poisoned = true;
+                            spawnFloatingText(hu.x, hu.y, "POISONED!", "#a3e635", tH + 5);
+                            if (typeof FX_ENABLED === 'undefined' || FX_ENABLED) fxAdd({ kind: 'bubbles', x: hu.x, y: hu.y, t0: tH, dur: 26, rgb: '120,230,90' });
+                            addLog(`☠ ${hero.name} was bitten by ${en.name} and injected with deadly venom!`, "text-lime-400 font-bold");
+                        }
+                    }
                     const th = heroAffix(hero, 'thorns');
                     if (th && Math.abs(en.x - hu.x) + Math.abs(en.y - hu.y) <= 1) {
                         const td = rollDice(th.thorns[0], th.thorns[1]);
@@ -12751,6 +12761,19 @@
                 h.hp += heal;
                 const u = state.combat.heroes[i];
                 if (u && !u.fled) spawnFloatingText(u.x, u.y, `+${heal}`, "#34d399", fxStart() + 4);
+            });
+            // poison ticks for heroes in combat
+            state.party.forEach((h, i) => {
+                if (!h.poisoned || h.hp <= 0) return;
+                const pdmg = Math.max(1, Math.round(h.maxHp * 0.05));
+                h.hp = Math.max(h.gm ? 1 : 0, h.hp - pdmg);
+                const u = state.combat.heroes[i];
+                if (u && !u.fled) {
+                    spawnFloatingText(u.x, u.y, `☠ -${pdmg}`, "#a3e635", fxStart() + 4);
+                    if (typeof FX_ENABLED === 'undefined' || FX_ENABLED) fxAdd({ kind: 'bubbles', x: u.x, y: u.y, t0: fxStart(), dur: 24, rgb: '120,230,90' });
+                }
+                addLog(`☠ ${h.name} suffers ${pdmg} poison DMG!`, "text-lime-300");
+                if (h.hp <= 0) addLog(`☠ ${h.name} falls to venom!`, "text-rose-400 font-bold");
             });
 
             if (state.party.every(h => h.hp <= 0)) {

@@ -5,6 +5,8 @@ This folder contains all updated and new files for:
 2. **Armor Visual Decoupling:** Decoupled armor models from shields so heroes only display shields when actually equipped.
 3. **Adventurer's Compendium Manual Rewrite:** Complete 12-tab manual (`Basics`, `Ancestries & Classes`, `Fighter`, `Paladin`, `Ranger`, `Rogue`, `Cleric`, `Wizard`, `Bard`, `Tinker`, `Playing Online`, `Bestiary`).
 4. **Admin Panel Character Inspection:** Complete character inspector tool in `admin.html`.
+5. **Monster Visual Overhaul & Proportions:** Redesigned vector artwork for Kobold, Goblin, Wolf, Orc Raider, Skeleton, Headless, and Gargoyle with accurate lore details, proper sizing relative to characters, and refined ground shadows.
+6. **Giant Snake Venom:** Giant Snake bite now carries venom (35% poison chance on hit) that inflicts poison status in combat and persists on the overworld until cured.
 
 ---
 
@@ -18,8 +20,9 @@ patch/
 ├── css/
 │   └── game.css        -> Paperdoll grid layout for #pd-shield
 ├── js/
-│   ├── game.js         -> Shield logic, smiths, drops, 2H rules, inventory
+│   ├── game.js         -> Combat venom, monster stats, shield logic, inventory
 │   ├── heroart.js      -> Shield vector artwork & armor model decoupling
+│   ├── monsterart.js   -> Overhauled vector art for Kobold, Goblin, Wolf, Orc, Skeleton, Headless, Gargoyle, Snake
 │   └── net.js          -> Shield state synchronization
 └── server/
     ├── accounts.php    -> Account & character handling
